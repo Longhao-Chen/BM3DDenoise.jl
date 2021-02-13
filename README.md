@@ -16,9 +16,22 @@ Pkg.add("https://github.com/Longhao-Chen/BM3D.jl")
 
 ```julia
 using BM3D
-img = load("image path")
-noise_img = Gary.(img)	# Now only supports grayscale images
-denoise_img = bm3d(img, noise_variance)
+using Images
+img = load("noise_image_path")
+noise_img = Gray.(img)	# Now only supports grayscale images
+denoise_img = bm3d(noise_img, noise_variance)	# noise_variance noise_variance is the variance of the noise.
+```
+
+### Example
+
+```julia
+using BM3D
+using Images
+noise_image_path = download("http://www.cs.tut.fi/~foi/GCF-BM3D/images/Lena512_noi_s100.png")
+noise_variance = 100 / 255
+img = load(noise_image_path)
+noise_img = Gray.(img)	# Now only supports grayscale images
+denoise_img = bm3d(noise_img, noise_variance)	# noise_variance noise_variance is the variance of the noise.
 ```
 
 ## Todo
