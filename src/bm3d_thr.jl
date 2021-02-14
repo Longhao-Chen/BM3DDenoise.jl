@@ -12,6 +12,7 @@ function bm3d_thr(img::Matrix{Float64}, sigma::AbstractFloat)
 	searchWin = [19;19]
 	nMatch = 31
 	thresh3D = 2.7
+	kaiser_α = 2.0
 
 	# Block matching
 	(Ilist, Jlist) = get_reference_pixels([size(img,1); size(img,2)], patchSize, stepSize, nBorder)
@@ -22,13 +23,19 @@ function bm3d_thr(img::Matrix{Float64}, sigma::AbstractFloat)
 	# Filter 3D groups by hard thresholding 
 	HardThresholding!(G3D, sigma * thresh3D)
 
+	# kaiser window
+	kaiser = kaiser_window(patchSize[1], patchSize[2], kaiser_α)
+
 	W = zeros(Float64, size(G3D))
 	@inbounds @views Base.Threads.@threads for j = 1:length(Jlist)
 		for i = 1:length(Ilist)
 			T = nnz(G3D[:,:,:,i,j])
-			W[:,:,:,i,j] .= T > 0 ? 1.0/(T * sigma^2) : 1.0
+			for k = 1:nMatch+1
+				W[k,:,:,i,j] .= T > 0 ? kaiser./(T * sigma^2) : kaiser
+			end
 		end
 	end
+
 	@strided G3D .*= W
 
 	imgOut = invert_groups([size(img,1); size(img,2)], G3D, matchTable, Ilist, Jlist, patchSize) 

@@ -11,6 +11,7 @@ include("bm3d_wie.jl")
 include("get_reference_pixels.jl")
 include("groups.jl")
 include("HardThresholding.jl")
+include("kaiser_window.jl")
 include("match_patches.jl")
 
 """

@@ -15,6 +15,7 @@ function bm3d_wie(img::Matrix{Float64}, imgBasic::Matrix{Float64}, sigma::Abstra
 	searchWin = [11;11]
 	nMatch = 15
 	thresh3D = 2.7
+	kaiser_α = 2.0
 
 	# block matching step
 	(Ilist,Jlist) = get_reference_pixels([size(img,1);size(img,2)],patchSize,stepSize,nBorder)
@@ -28,12 +29,17 @@ function bm3d_wie(img::Matrix{Float64}, imgBasic::Matrix{Float64}, sigma::Abstra
 	WC = @strided G3Dbasic.^2 ./ (G3Dbasic.^2 .+ sigma^2) # devec?
 	@strided G3D .*= WC
 
+	# kaiser window
+	kaiser = kaiser_window(patchSize[1], patchSize[2], kaiser_α)
+
 	# Weight groups 
 	W = zeros(Float64,size(G3D))
 	@inbounds @views Base.Threads.@threads for j = 1:length(Jlist)
 		for i = 1:length(Ilist)
 			T = norm(WC[:,:,:,i,j])
-			W[:,:,:,i,j] .= T > 0 ? 1.0/(T * sigma)^2 : 1.0
+			for k = 1:nMatch+1
+				W[k,:,:,i,j] .= T > 0 ? kaiser./(T * sigma)^2 : kaiser
+			end
 		end
 	end
 
