@@ -90,18 +90,18 @@ function groups_to_image!(img::Matrix{Float64},
 
 			for jj = 1:patchSize[2]
 				@simd for ii = 1:patchSize[1]
-					img[Int(Ilist[i1]+ii-1), Int(Jlist[j1]+jj-1)] += G3D[1, Int(ii), Int(jj), Int(i1), Int(j1)]
+					img[Ilist[i1]+ii-1, Jlist[j1]+jj-1] += G3D[1, ii, jj, i1, j1]
 				end
 			end
 
 			for k = 1:Nmatch
 
-				i2 = i1 + matchTable[1, Int(k), Int(i1),Int(j1)]
-				j2 = j1 + matchTable[2, Int(k), Int(i1), Int(j1)]
+				i2 = i1 + Int(matchTable[1, k, i1, j1])
+				j2 = j1 + Int(matchTable[2, k, i1, j1])
 
 				for jj = 1:patchSize[2]
 					@simd for ii = 1:patchSize[1]
-						img[Int(Ilist[Int(i2)]+ ii - 1), Int(Jlist[Int(j2)]+jj-1)] += G3D[Int(k+1), Int(ii), Int(jj), Int(i1), Int(j1)]
+						img[Ilist[i2] + ii - 1, Jlist[j2] + jj - 1] += G3D[k + 1, ii, jj, i1, j1]
 					end
 				end
 			end
@@ -129,12 +129,12 @@ function image_to_groups!(img::Matrix{Float64},
 
 			for k = 1:Nmatch
 
-				i2 = i1 + matchTable[1,k,i1,j1]
-				j2 = j1 + matchTable[2,k,i1,j1]
+				i2 = i1 + Int(matchTable[1,k,i1,j1])
+				j2 = j1 + Int(matchTable[2,k,i1,j1])
 
 				for jj = 1:patchSize[2]
 					@simd for ii = 1:patchSize[1]
-						G3D[Int(k+1), Int(ii), Int(jj), Int(i1), Int(j1)] = img[Ilist[Int(i2)] + ii - 1, Jlist[Int(j2)] + jj - 1]
+						G3D[k + 1, ii, jj, i1, j1] = img[Ilist[i2] + ii - 1, Jlist[j2] + jj - 1]
 					end
 				end
 			end
