@@ -21,12 +21,11 @@ function bm3d_wie(img::Matrix{Float64}, imgBasic::Matrix{Float64}, sigma::Abstra
 	matchTable = match_patches(imgBasic,Ilist,Jlist,patchSize,searchWin,nMatch)
 
 	# Compute 3D group spectrum
-	G3D_t = Base.Threads.@spawn form_groups(img,matchTable,Ilist,Jlist,patchSize)
-	G3Dbasic_t = Base.Threads.@spawn form_groups(imgBasic,matchTable,Ilist,Jlist,patchSize)
+	G3D = form_groups(img,matchTable,Ilist,Jlist,patchSize)
+	G3Dbasic = form_groups(imgBasic,matchTable,Ilist,Jlist,patchSize)
 
 	# Wiener filtering of 3D groups, using basic estimate as target spectrum
-	G3D = fetch(G3D_t)
-	WC = @strided fetch(G3Dbasic_t).^2 ./ (fetch(G3Dbasic_t).^2 .+ sigma^2) # devec?
+	WC = @strided G3Dbasic.^2 ./ (G3Dbasic.^2 .+ sigma^2) # devec?
 	@strided G3D .*= WC
 
 	# Weight groups 
@@ -40,12 +39,12 @@ function bm3d_wie(img::Matrix{Float64}, imgBasic::Matrix{Float64}, sigma::Abstra
 
 	@strided G3D .*= W
 
-	imgOut = Base.Threads.@spawn invert_groups([size(img,1);size(img,2)], G3D, matchTable, Ilist, Jlist, patchSize) 
+	imgOut = invert_groups([size(img,1);size(img,2)], G3D, matchTable, Ilist, Jlist, patchSize) 
 
 	Wout = zeros(Float64,size(img))
 	groups_to_image!(Wout,W,matchTable,Ilist,Jlist,patchSize)
 
-	return fetch(imgOut) ./ Wout
+	return imgOut ./ Wout
 
 end
 

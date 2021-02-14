@@ -31,11 +31,11 @@ function bm3d_thr(img::Matrix{Float64}, sigma::AbstractFloat)
 	end
 	@strided G3D .*= W
 
-	imgOut = Base.Threads.@spawn invert_groups([size(img,1); size(img,2)], G3D, matchTable, Ilist, Jlist, patchSize) 
+	imgOut = invert_groups([size(img,1); size(img,2)], G3D, matchTable, Ilist, Jlist, patchSize) 
 
 	Wout = zeros(Float64, size(img))
 	groups_to_image!(Wout, W, matchTable, Ilist, Jlist, patchSize)
 
-	return fetch(imgOut) ./ Wout
+	return imgOut ./ Wout
 
 end
