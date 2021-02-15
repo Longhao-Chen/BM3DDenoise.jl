@@ -32,8 +32,8 @@ function bm3d_wie(img::Matrix{Float64}, imgBasic::Matrix{Float64}, sigma::Abstra
 	W = zeros(Float64,size(G3D))
 	@inbounds @views Base.Threads.@threads for j = 1:length(Jlist)
 		for i = 1:length(Ilist)
-			T = norm(WC[:,:,:,i,j], 2)
-			W[:,:,:,i,j] .= T > 0 ? 1.0/T : 1.0
+			T = norm(WC[:,:,:,i,j])
+			W[:,:,:,i,j] .= T > 0 ? 1.0/(T * sigma)^2 : 1.0
 		end
 	end
 

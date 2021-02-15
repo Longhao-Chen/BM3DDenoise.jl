@@ -26,7 +26,7 @@ function bm3d_thr(img::Matrix{Float64}, sigma::AbstractFloat)
 	@inbounds @views Base.Threads.@threads for j = 1:length(Jlist)
 		for i = 1:length(Ilist)
 			T = nnz(G3D[:,:,:,i,j])
-			W[:,:,:,i,j] .= T > 0 ? 1.0/T : 1.0
+			W[:,:,:,i,j] .= T > 0 ? 1.0/(T * sigma^2) : 1.0
 		end
 	end
 	@strided G3D .*= W
