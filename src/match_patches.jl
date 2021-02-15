@@ -32,15 +32,11 @@ function match_patches(img::Matrix{Float64},
 			LB = (j1 == j2) ? (i1+1) : (i1 - searchWin[1])
 			for i2 = maximum([1,LB]):minimum([i1+searchWin[1];N1])
 
-					d2 = 0.0
-					for jj = 1:patchSize[2]
-						@simd for ii = 1:patchSize[1]
-							d2 += (img[Ilist[i1] + ii - 1,Jlist[j1] + jj - 1] - img[Ilist[i2] + ii - 1, Jlist[j2] + jj - 1])^2
-						end
-					end
-					d2 /= prod(patchSize)
+				d2 = norm(img[Ilist[i1]:(patchSize[1]-1+Ilist[i1]), Jlist[j1]:(patchSize[2]-1+Jlist[j1])]
+					.- img[Ilist[i2]:(patchSize[1]-1+Ilist[i2]), Jlist[j2]:(patchSize[2]-1+Jlist[j2])])^2
+				d2 /= prod(patchSize)
 
-					# Check current maximum for patch (i1,j1)
+				# Check current maximum for patch (i1,j1)
 				if (d2 < matchMaxTable[2,i1,j1])
 					kmatch = Int(matchMaxTable[1,i1,j1])
 					matchTable[1, kmatch, i1, j1] = i2 - i1
@@ -69,5 +65,5 @@ function match_patches(img::Matrix{Float64},
 		end
 	end
 
-	return matchTable
+	return matchTable[1:2, :, :, :]
 end

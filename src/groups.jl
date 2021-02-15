@@ -87,23 +87,12 @@ function groups_to_image!(img::Matrix{Float64},
 
 	@inbounds @views Base.Threads.@threads for j1 = 1:length(Jlist)
 		for i1 = 1:length(Ilist)
-
-			for jj = 1:patchSize[2]
-				@simd for ii = 1:patchSize[1]
-					img[Ilist[i1]+ii-1, Jlist[j1]+jj-1] += G3D[1, ii, jj, i1, j1]
-				end
-			end
+			img[Ilist[i1]:(patchSize[1]-1+Ilist[i1]), Jlist[j1]:(patchSize[2]-1+Jlist[j1])] .+= G3D[1, 1:patchSize[1], 1:patchSize[2], i1, j1]
 
 			for k = 1:Nmatch
-
 				i2 = i1 + Int(matchTable[1, k, i1, j1])
 				j2 = j1 + Int(matchTable[2, k, i1, j1])
-
-				for jj = 1:patchSize[2]
-					@simd for ii = 1:patchSize[1]
-						img[Ilist[i2] + ii - 1, Jlist[j2] + jj - 1] += G3D[k + 1, ii, jj, i1, j1]
-					end
-				end
+				img[Ilist[i2]:(patchSize[1]-1+Ilist[i2]), Jlist[j2]:(patchSize[2]-1+Jlist[j2])] .+= G3D[k + 1, 1:patchSize[1], 1:patchSize[2], i1, j1]
 			end
 
 		end
@@ -121,23 +110,14 @@ function image_to_groups!(img::Matrix{Float64},
 
 	@inbounds @views Base.Threads.@threads for j1 = 1:length(Jlist)
 		for i1 = 1:length(Ilist)
-			for jj = 1:patchSize[2]
-				@simd for ii = 1:patchSize[1]
-					G3D[1,ii,jj,i1,j1] = img[Ilist[i1]+ii-1,Jlist[j1]+jj-1]
-				end
-			end
+			G3D[1, 1:patchSize[1], 1:patchSize[2], i1, j1] .= img[Ilist[i1]:(patchSize[1]-1+Ilist[i1]), Jlist[j1]:(patchSize[2]-1+Jlist[j1])]
 
 			for k = 1:Nmatch
-
 				i2 = i1 + Int(matchTable[1,k,i1,j1])
 				j2 = j1 + Int(matchTable[2,k,i1,j1])
-
-				for jj = 1:patchSize[2]
-					@simd for ii = 1:patchSize[1]
-						G3D[k + 1, ii, jj, i1, j1] = img[Ilist[i2] + ii - 1, Jlist[j2] + jj - 1]
-					end
-				end
+				G3D[k + 1, 1:patchSize[1], 1:patchSize[2], i1, j1] .= img[Ilist[i2]:(patchSize[1]-1+Ilist[i2]), Jlist[j2]:(patchSize[2]-1+Jlist[j2])]
 			end
+
 		end
 	end
 end
