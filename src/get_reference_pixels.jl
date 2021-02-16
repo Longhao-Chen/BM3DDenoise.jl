@@ -16,8 +16,6 @@ function get_reference_pixels(imgSize::Vector{Int64},
 				stepSize::Vector{Int64},
 				nBorder::Vector{Int64})
 
-	@debug "get_reference_pixels($imgSize, $patchSize, $stepSize, $nBorder)"
-
 	ph = imgSize[1] - 2*nBorder[1] - patchSize[1] + 1
 	pw = imgSize[2] - 2*nBorder[2] - patchSize[2] + 1
 
@@ -25,10 +23,10 @@ function get_reference_pixels(imgSize::Vector{Int64},
 	J = [nBorder[2] .+ 1:stepSize[2]:pw...]
 
 	# Make sure there is a patch touching the lower and right borders
-	if(maximum(I) < nBorder[1] + ph)
+	if maximum(I) < nBorder[1] + ph
 		I = [I; nBorder[1] + ph]
 	end
-	if(maximum(J) < nBorder[2] + pw)
+	if maximum(J) < nBorder[2] + pw
 		J = [J; nBorder[2] + pw]
 	end
 

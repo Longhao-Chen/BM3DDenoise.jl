@@ -37,7 +37,7 @@ function match_patches(img::Matrix{Float64},
 				d2 /= prod(patchSize)
 
 				# Check current maximum for patch (i1,j1)
-				if (d2 < matchMaxTable[2,i1,j1])
+				if d2 < matchMaxTable[2,i1,j1]
 					kmatch = Int(matchMaxTable[1,i1,j1])
 					matchTable[1, kmatch, i1, j1] = i2 - i1
 					matchTable[2, kmatch, i1, j1] = j2 - j1
@@ -49,15 +49,15 @@ function match_patches(img::Matrix{Float64},
 				end
 
 				# Check current maximum for patch (i2,j2)
-				if (d2 < matchMaxTable[2,i2,j2])
+				if d2 < matchMaxTable[2,i2,j2]
 					kmatch = Int(matchMaxTable[1,i2,j2])
 					matchTable[1, kmatch, i2, j2] = i1 - i2
 					matchTable[2, kmatch, i2, j2] = j1 - j2
 					matchTable[3, kmatch, i2, j2] = d2
 
-					(tmp2,tmp1) = findmax(matchTable[3,:,i2,j2])
-					matchMaxTable[1,i2,j2] = tmp1
-					matchMaxTable[2,i2,j2] = tmp2
+					(tmp2,tmp1) = findmax(matchTable[3, :, i2, j2])
+					matchMaxTable[1, i2, j2] = tmp1
+					matchMaxTable[2, i2, j2] = tmp2
 				end
 
 				end
@@ -65,5 +65,5 @@ function match_patches(img::Matrix{Float64},
 		end
 	end
 
-	return matchTable[1:2, :, :, :]
+	return matchTable
 end

@@ -1,123 +1,145 @@
 """
-	form_groups(img::Matrix{Float64},
-		matchTable::Array{Float64,4},
-		Ilist::Vector{Int64},
-		Jlist::Vector{Int64},
-		patchSize::Vector{Int64})
+	form_group!(G3D::Array{Float64, 3},
+					img::Matrix{Float64},
+					matchTable::Array{Float64, 4},
+					Ilist::Vector{Int64},
+					Jlist::Vector{Int64},
+					patchSize::Vector{Int64},
+					position::Tuple{Int, Int})
 
-Forward BM3D groupings (full transform... inefficient!)
+Forward BM3D groupings
 """
-function form_groups(img::Matrix{Float64},
+function form_group!(G3D::Array{Float64, 3},
+			img::Matrix{Float64},
 			matchTable::Array{Float64, 4},
 			Ilist::Vector{Int64},
 			Jlist::Vector{Int64},
-			patchSize::Vector{Int64})
-
-	(t,Nmatch,N1,N2) = size(matchTable)
-
-	G3D = zeros(Float64, Nmatch+1, patchSize[1], patchSize[2], N1, N2)
+			patchSize::Vector{Int64},
+			position::Tuple{Int, Int})
 
 	# Form table of 3D groups
-	image_to_groups!(img, G3D, matchTable, Ilist, Jlist, patchSize)
+	image_to_group!(img, G3D, matchTable, Ilist, Jlist, patchSize, position)
 
-	# Apply 3D DCT on groups. To prevent OutOfMemoryError, we will transform it separately
-	@views @inbounds for n1 in 1:N1
-		for n2 in 1:N2
-			FFTW.dct!(G3D[:, :, :, n1, n2])
-		end
-	end
-
-	return G3D
+	# Apply 3D DCT on groups.
+	FFTW.dct!(G3D)
 
 end
 
 """
-	invert_groups(imgSize::Vector{Int64},
-					G3D::Array{Float64,5},
-					matchTable::Array{Float64,4},
+	invert_group!(img::Matrix{Float64},
+					G3D::Array{Float64, 3},
+					matchTable::Array{Float64, 4},
 					Ilist::Vector{Int64},
 					Jlist::Vector{Int64},
-					patchSize::Vector{Int64})
+					patchSize::Vector{Int64},
+					position::Tuple{Int, Int})
 
 Inverse BM3D groupings
 """
-function invert_groups(imgSize::Vector{Int64},
-				G3D::Array{Float64, 5},
+function invert_group!(img::Matrix{Float64},
+				G3D::Array{Float64, 3},
 				matchTable::Array{Float64, 4},
 				Ilist::Vector{Int64},
 				Jlist::Vector{Int64},
-				patchSize::Vector{Int64})
+				patchSize::Vector{Int64},
+				position::Tuple{Int, Int})
 
-	(t, Nmatch, N1, N2) = size(matchTable)
+	(t, Nmatch) = size(matchTable)
 
-	# Allocate image and weight table
-	img = zeros(Float64, imgSize[1], imgSize[2])
+	# Apply inverse 3D DCT on groups
+	FFTW.idct!(G3D)
 
-	# Apply inverse 3D DCT on groups. To prevent OutOfMemoryError, we will transform it separately
-	@views @inbounds for n1 in 1:N1
-		for n2 in 1:N2
-			FFTW.idct!(G3D[:, :, :, n1, n2])
-		end
-	end
-
-	groups_to_image!(img, G3D, matchTable, Ilist, Jlist, patchSize)
-
-	return img
+	group_to_image!(img, G3D, matchTable, Ilist, Jlist, patchSize, position)
 
 end
 
 """
-	groups_to_image!(img::Matrix{Float64},
-					G3D::Array{Float64,5},
-					matchTable::Array{Float64,4},
+	group_to_image!(img::Matrix{Float64},
+					G3D::Array{Float64, 3},
+					matchTable::Array{Float64, 4},
 					Ilist::Vector{Int64},
 					Jlist::Vector{Int64},
-					patchSize::Vector{Int64})
+					patchSize::Vector{Int64},
+					position::Tuple{Int, Int})
 
-Return filtered patches to their place in the image
+group to image
 """
-function groups_to_image!(img::Matrix{Float64},
-				G3D::Array{Float64,5},
-				matchTable::Array{Float64,4},
+function group_to_image!(img::Matrix{Float64},
+				G3D::Array{Float64, 3},
+				matchTable::Array{Float64, 4},
 				Ilist::Vector{Int64},
 				Jlist::Vector{Int64},
-				patchSize::Vector{Int64})
+				patchSize::Vector{Int64},
+				position::Tuple{Int, Int})
 
 	Nmatch = size(matchTable,2)
+	(i1, j1) = position
 
-	@inbounds @views Base.Threads.@threads for j1 = 1:length(Jlist)
-		for i1 = 1:length(Ilist)
-			img[Ilist[i1]:(patchSize[1]-1+Ilist[i1]), Jlist[j1]:(patchSize[2]-1+Jlist[j1])] .+= G3D[1, 1:patchSize[1], 1:patchSize[2], i1, j1]
+	@strided img[Ilist[i1]:(patchSize[1] - 1 + Ilist[i1]), Jlist[j1]:(patchSize[2] - 1 + Jlist[j1])] .+= G3D[1, 1:patchSize[1], 1:patchSize[2]]
 
-			for k = 1:Nmatch
-				i2 = i1 + Int(matchTable[1, k, i1, j1])
-				j2 = j1 + Int(matchTable[2, k, i1, j1])
-				img[Ilist[i2]:(patchSize[1]-1+Ilist[i2]), Jlist[j2]:(patchSize[2]-1+Jlist[j2])] .+= G3D[k + 1, 1:patchSize[1], 1:patchSize[2], i1, j1]
-			end
-
-		end
+	@inbounds @views Threads.@threads for k = 1:Nmatch
+		i2 = i1 + Int(matchTable[1, k, i1, j1])
+		j2 = j1 + Int(matchTable[2, k, i1, j1])
+		img[Ilist[i2]:(patchSize[1] - 1 + Ilist[i2]), Jlist[j2]:(patchSize[2] - 1 + Jlist[j2])] .+= G3D[k + 1, 1:patchSize[1], 1:patchSize[2]]
 	end
 end
 
-function image_to_groups!(img::Matrix{Float64},
-				G3D::Array{Float64,5},
-				matchTable::Array{Float64,4},
+"""
+	group_to_image!(img::Matrix{Float64},
+					W::Float64,
+					matchTable::Array{Float64, 4},
+					Ilist::Vector{Int64},
+					Jlist::Vector{Int64},
+					patchSize::Vector{Int64},
+					position::Tuple{Int, Int})
+"""
+function group_to_image!(img::Matrix{Float64},
+				W::Float64,
+				matchTable::Array{Float64, 4},
 				Ilist::Vector{Int64},
 				Jlist::Vector{Int64},
-				patchSize::Vector{Int64})
+				patchSize::Vector{Int64},
+				position::Tuple{Int, Int})
 
 	Nmatch = size(matchTable,2)
+	(i1, j1) = position
 
-	@inbounds @views Base.Threads.@threads for j1 = 1:length(Jlist)
-		for i1 = 1:length(Ilist)
-			G3D[1, 1:patchSize[1], 1:patchSize[2], i1, j1] .= img[Ilist[i1]:(patchSize[1]-1+Ilist[i1]), Jlist[j1]:(patchSize[2]-1+Jlist[j1])]
+	@strided img[Ilist[i1]:(patchSize[1] - 1 + Ilist[i1]), Jlist[j1]:(patchSize[2] - 1 + Jlist[j1])] .+= W
 
-			for k = 1:Nmatch
-				i2 = i1 + Int(matchTable[1,k,i1,j1])
-				j2 = j1 + Int(matchTable[2,k,i1,j1])
-				G3D[k + 1, 1:patchSize[1], 1:patchSize[2], i1, j1] .= img[Ilist[i2]:(patchSize[1]-1+Ilist[i2]), Jlist[j2]:(patchSize[2]-1+Jlist[j2])]
-			end
+	@inbounds @views Threads.@threads for k = 1:Nmatch
+		i2 = i1 + Int(matchTable[1, k, i1, j1])
+		j2 = j1 + Int(matchTable[2, k, i1, j1])
+		img[Ilist[i2]:(patchSize[1] - 1 + Ilist[i2]), Jlist[j2]:(patchSize[2] - 1 + Jlist[j2])] .+= W
+	end
+end
 
-		end
+"""
+	image_to_group!(img::Matrix{Float64},
+					G3D::Array{Float64, 3},
+					matchTable::Array{Float64, 4},
+					Ilist::Vector{Int64},
+					Jlist::Vector{Int64},
+					patchSize::Vector{Int64},
+					position::Tuple{Int, Int})
+
+
+"""
+function image_to_group!(img::Matrix{Float64},
+				G3D::Array{Float64, 3},
+				matchTable::Array{Float64, 4},
+				Ilist::Vector{Int64},
+				Jlist::Vector{Int64},
+				patchSize::Vector{Int64},
+				position::Tuple{Int, Int})
+
+	Nmatch = size(matchTable,2)
+	i1, j1 = position
+
+	G3D[1, 1:patchSize[1], 1:patchSize[2]] .= img[Ilist[i1]:(patchSize[1] - 1 + Ilist[i1]), Jlist[j1]:(patchSize[2] - 1 + Jlist[j1])]
+
+	Threads.@threads for k = 1:Nmatch
+		i2 = i1 + Int(matchTable[1, k, i1, j1])
+		j2 = j1 + Int(matchTable[2, k, i1, j1])
+		G3D[k + 1, 1:patchSize[1], 1:patchSize[2]] .= img[Ilist[i2]:(patchSize[1] - 1 + Ilist[i2]), Jlist[j2]:(patchSize[2] - 1 + Jlist[j2])]
 	end
 end
