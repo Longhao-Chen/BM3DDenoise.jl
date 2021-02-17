@@ -34,12 +34,15 @@ noise_img = Gray.(img)	# Now only supports grayscale images
 denoise_img = bm3d(noise_img, noise_variance)	# noise_variance noise_variance is the variance of the noise.
 ```
 
+If you want to customize parameters, see:
+
+```julia
+?bm3d_config
+```
+
+
 ## Todo
 
 - [ ] Add color image support
 - [ ] Performance optimization
 - [ ] Add noise variance estimation
-
-## Known issues
-
-* Too much memory required for large pictures.

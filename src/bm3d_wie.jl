@@ -6,15 +6,15 @@ img: input noisy image
 imgBasic: denoised image from first step of BM3D (hard thresholding)
 sigma: known or assumed standard deviation of noise
 """
-function bm3d_wie(img::Matrix{Float64}, imgBasic::Matrix{Float64}, sigma::AbstractFloat)
+function bm3d_wie(img::Matrix{Float64}, imgBasic::Matrix{Float64}, sigma::AbstractFloat, config::bm3d_config)
 
-	# Hard code algorithm parameters for now...
-	patchSize = [8;8] 
-	stepSize = [3;3]  
-	nBorder = [0;0]
-	searchWin = [11;11]
-	nMatch = 15
-	thresh3D = 2.7
+	# parameters
+	patchSize = config.wie_patchSize
+	stepSize = config.wie_stepSize
+	nBorder = config.wie_nBorder
+	searchWin = config.wie_searchWin
+	nMatch = config.wie_nMatch
+	thresh3D =config.wie_thresh3D
 
 	# block matching step
 	@info "2st get_reference_pixels"

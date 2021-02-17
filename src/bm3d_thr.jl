@@ -3,15 +3,15 @@
 
 1st step of BM3D denoising: hard thresholding
 """
-function bm3d_thr(img::Matrix{Float64}, sigma::AbstractFloat)
+function bm3d_thr(img::Matrix{Float64}, sigma::AbstractFloat, config::bm3d_config)
 
-	# Hard code algorithm parameters for now...
-	patchSize = [8;8] 
-	stepSize = [3;3]  
-	nBorder = [0;0]
-	searchWin = [19;19]
-	nMatch = 31
-	thresh3D = 2.7
+	# parameters
+	patchSize = config.thr_patchSize
+	stepSize = config.thr_stepSize
+	nBorder = config.thr_nBorder
+	searchWin = config.thr_searchWin
+	nMatch = config.thr_nMatch
+	thresh3D = config.thr_thresh3D
 
 	# Block matching
 	@info "1st get_reference_pixels"
