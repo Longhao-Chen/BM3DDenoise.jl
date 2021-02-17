@@ -30,7 +30,7 @@ function bm3d_wie(img::Matrix{Float64}, imgBasic::Matrix{Float64}, sigma::Abstra
 	imgOut = zeros(Float64, size(img))
 
 	# Each reference block is processed to reduce memory usage
-	for J = 1:length(Jlist)
+	@views @inbounds for J = 1:length(Jlist)
 		for I = 1:length(Ilist)
 			# Compute 3D group spectrum
 			form_group!(G3D, img, matchTable, Ilist, Jlist, patchSize, (I, J))
@@ -38,12 +38,12 @@ function bm3d_wie(img::Matrix{Float64}, imgBasic::Matrix{Float64}, sigma::Abstra
 
 			# Wiener filtering of 3D groups, using basic estimate as target spectrum
 			WC .= @strided G3Dbasic.^2 ./ (G3Dbasic.^2 .+ sigma^2)
-			@strided G3D .*= WC
+			G3D .*= WC
 
 			# Weight
 			T = norm(WC, 2)
 			W = T > 0 ? 1.0/T : 1.0
-			@strided G3D .*= W
+			G3D .*= W
 
 			invert_group!(imgOut, G3D, matchTable, Ilist, Jlist, patchSize, (I, J))
 			group_to_image!(Wout, W, matchTable, Ilist, Jlist, patchSize, (I, J))

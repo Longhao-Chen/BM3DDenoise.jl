@@ -25,7 +25,7 @@ function bm3d_thr(img::Matrix{Float64}, sigma::AbstractFloat)
 	G3D = zeros(Float64, nMatch+1, patchSize[1], patchSize[2])
 
 	# Each reference block is processed to reduce memory usage
-	for J = 1:length(Jlist)
+	@views @inbounds for J = 1:length(Jlist)
 		for I = 1:length(Ilist)
 			form_group!(G3D, img, matchTable, Ilist, Jlist, patchSize, (I, J))
 
@@ -34,7 +34,7 @@ function bm3d_thr(img::Matrix{Float64}, sigma::AbstractFloat)
 
 			T = nnz(G3D)
 			W = T > 0 ? 1.0 / T : 1.0
-			@strided G3D .*= W
+			G3D .*= W
 
 			invert_group!(imgOut, G3D, matchTable, Ilist, Jlist, patchSize, (I, J)) 
 			group_to_image!(Wout, W, matchTable, Ilist, Jlist, patchSize, (I, J))
