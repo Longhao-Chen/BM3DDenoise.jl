@@ -1,14 +1,14 @@
 """
-	match_patches(img::Matrix{Float64},
-				Ilist::Vector{Int64},
-				Jlist::Vector{Int64},
-				patchSize::Vector{Int64},
-				searchWin::Vector{Int64},
-				nMatch::Int64)
+	match_patches(img::AbstractArray{Float64},
+			Ilist::Vector{Int64},
+			Jlist::Vector{Int64},
+			patchSize::Vector{Int64},
+			searchWin::Vector{Int64},
+			nMatch::Int64)
 
 Full-search block matching algorithm for BM3D
 """
-function match_patches(img::Matrix{Float64},
+function match_patches(img::AbstractArray{Float64, 2},
 			Ilist::Vector{Int64},
 			Jlist::Vector{Int64},
 			patchSize::Vector{Int64},
@@ -65,4 +65,14 @@ function match_patches(img::Matrix{Float64},
 	end
 
 	return matchTable
+end
+
+# For color images
+function match_patches(img::Array{Float64, 3},
+			Ilist::Vector{Int64},
+			Jlist::Vector{Int64},
+			patchSize::Vector{Int64},
+			searchWin::Vector{Int64},
+			nMatch::Int64)
+	match_patches(view(img, :, :, 1), Ilist, Jlist, patchSize, searchWin, nMatch)
 end

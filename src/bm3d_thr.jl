@@ -1,9 +1,9 @@
 """
-	bm3d_thr(img::Matrix{Float64}, sigma::AbstractFloat)
+	bm3d_thr(img::Array{Float64}, sigma::AbstractFloat, config::bm3d_config)
 
 1st step of BM3D denoising: hard thresholding
 """
-function bm3d_thr(img::Matrix{Float64}, sigma::AbstractFloat, config::bm3d_config)
+function bm3d_thr(img::Array{Float64}, sigma::AbstractFloat, config::bm3d_config)
 
 	# parameters
 	patchSize = config.thr_patchSize
@@ -22,8 +22,25 @@ function bm3d_thr(img::Matrix{Float64}, sigma::AbstractFloat, config::bm3d_confi
 
 	Wout = zeros(Float64, size(img))
 	imgOut = zeros(Float64, size(img))
-	G3D = zeros(Float64, nMatch+1, patchSize[1], patchSize[2])
+	G3D = zeros(Float64, nMatch+1, patchSize[1], patchSize[2], axes(img)[3:end]...)
 
+	# 3D filtering
+	@info "1st 3D filtering"
+	thr_3D_filtering!(Wout, imgOut, G3D, img, matchTable, Ilist, Jlist, patchSize, thresh3D, sigma)
+
+	return imgOut ./ Wout
+end
+
+"""
+3D filtering
+"""
+function thr_3D_filtering!(Wout::AbstractArray{<:AbstractFloat, 2},
+			imgOut::AbstractArray{<:AbstractFloat, 2},
+			G3D::AbstractArray{<:AbstractFloat, 3},
+			img::AbstractArray{<:AbstractFloat, 2},
+			matchTable::Array{<:AbstractFloat},
+			Ilist::Array{Int}, Jlist::Array{Int},
+			patchSize::Array{Int}, thresh3D::AbstractFloat, sigma::AbstractFloat)
 	# Each reference block is processed to reduce memory usage
 	@views @inbounds for J = 1:length(Jlist)
 		for I = 1:length(Ilist)
@@ -41,8 +58,19 @@ function bm3d_thr(img::Matrix{Float64}, sigma::AbstractFloat, config::bm3d_confi
 
 		end
 	end
-	return imgOut ./ Wout
+end
 
+# For color images
+function thr_3D_filtering!(Wout::Array{<:AbstractFloat, 3},
+	imgOut::Array{<:AbstractFloat, 3},
+	G3D::Array{<:AbstractFloat, 4},
+	img::Array{<:AbstractFloat, 3},
+	matchTable::Array{<:AbstractFloat},
+	Ilist::Array{Int}, Jlist::Array{Int},
+	patchSize::Array{Int}, thresh3D::AbstractFloat, sigma::AbstractFloat)
+	@views @inbounds Threads.@threads for i = 1:size(img, 3)
+		thr_3D_filtering!(Wout[:, :, i], imgOut[:, :, i], G3D[:, :, :, i], img[:, :, i], matchTable, Ilist, Jlist, patchSize, thresh3D, sigma)
+	end
 end
 
 """

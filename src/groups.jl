@@ -9,8 +9,8 @@
 
 Forward BM3D groupings
 """
-function form_group!(G3D::Array{Float64, 3},
-			img::Matrix{Float64},
+function form_group!(G3D::AbstractArray{Float64, 3},
+			img::AbstractArray{Float64, 2},
 			matchTable::Array{Float64, 4},
 			Ilist::Vector{Int64},
 			Jlist::Vector{Int64},
@@ -26,18 +26,18 @@ function form_group!(G3D::Array{Float64, 3},
 end
 
 """
-	invert_group!(img::Matrix{Float64},
-					G3D::Array{Float64, 3},
-					matchTable::Array{Float64, 4},
-					Ilist::Vector{Int64},
-					Jlist::Vector{Int64},
-					patchSize::Vector{Int64},
-					position::Tuple{Int, Int})
+	invert_group!(img::AbstractArray{Float64, 2},
+				G3D::AbstractArray{Float64, 3},
+				matchTable::Array{Float64, 4},
+				Ilist::Vector{Int64},
+				Jlist::Vector{Int64},
+				patchSize::Vector{Int64},
+				position::Tuple{Int, Int})
 
 Inverse BM3D groupings
 """
-function invert_group!(img::Matrix{Float64},
-				G3D::Array{Float64, 3},
+function invert_group!(img::AbstractArray{Float64, 2},
+				G3D::AbstractArray{Float64, 3},
 				matchTable::Array{Float64, 4},
 				Ilist::Vector{Int64},
 				Jlist::Vector{Int64},
@@ -54,18 +54,18 @@ function invert_group!(img::Matrix{Float64},
 end
 
 """
-	group_to_image!(img::Matrix{Float64},
-					G3D::Array{Float64, 3},
-					matchTable::Array{Float64, 4},
-					Ilist::Vector{Int64},
-					Jlist::Vector{Int64},
-					patchSize::Vector{Int64},
-					position::Tuple{Int, Int})
+	group_to_image!(img::AbstractArray{Float64, 2},
+				G3D::AbstractArray{Float64, 3},
+				matchTable::Array{Float64, 4},
+				Ilist::Vector{Int64},
+				Jlist::Vector{Int64},
+				patchSize::Vector{Int64},
+				position::Tuple{Int, Int})
 
 group to image
 """
-function group_to_image!(img::Matrix{Float64},
-				G3D::Array{Float64, 3},
+function group_to_image!(img::AbstractArray{Float64, 2},
+				G3D::AbstractArray{Float64, 3},
 				matchTable::Array{Float64, 4},
 				Ilist::Vector{Int64},
 				Jlist::Vector{Int64},
@@ -85,15 +85,15 @@ function group_to_image!(img::Matrix{Float64},
 end
 
 """
-	group_to_image!(img::Matrix{Float64},
-					W::Float64,
-					matchTable::Array{Float64, 4},
-					Ilist::Vector{Int64},
-					Jlist::Vector{Int64},
-					patchSize::Vector{Int64},
-					position::Tuple{Int, Int})
+	group_to_image!(img::AbstractArray{Float64, 2},
+				W::Float64,
+				matchTable::Array{Float64, 4},
+				Ilist::Vector{Int64},
+				Jlist::Vector{Int64},
+				patchSize::Vector{Int64},
+				position::Tuple{Int, Int})
 """
-function group_to_image!(img::Matrix{Float64},
+function group_to_image!(img::AbstractArray{Float64, 2},
 				W::Float64,
 				matchTable::Array{Float64, 4},
 				Ilist::Vector{Int64},
@@ -114,18 +114,17 @@ function group_to_image!(img::Matrix{Float64},
 end
 
 """
-	image_to_group!(img::Matrix{Float64},
-					G3D::Array{Float64, 3},
+	image_to_group!(img::AbstractArray{Float64, 2},
+					G3D::AbstractArray{Float64, 3},
 					matchTable::Array{Float64, 4},
 					Ilist::Vector{Int64},
 					Jlist::Vector{Int64},
 					patchSize::Vector{Int64},
 					position::Tuple{Int, Int})
 
-
 """
-function image_to_group!(img::Matrix{Float64},
-				G3D::Array{Float64, 3},
+function image_to_group!(img::AbstractArray{Float64, 2},
+				G3D::AbstractArray{Float64, 3},
 				matchTable::Array{Float64, 4},
 				Ilist::Vector{Int64},
 				Jlist::Vector{Int64},
