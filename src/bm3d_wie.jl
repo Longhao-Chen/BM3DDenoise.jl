@@ -14,6 +14,7 @@ function bm3d_wie(img::Array{Float64}, imgBasic::Array{Float64}, sigma::Abstract
 	nBorder = config.wie_nBorder
 	searchWin = config.wie_searchWin
 	nMatch = config.wie_nMatch
+	threshSimilar = config.wie_threshSimilar
 	thresh3D =config.wie_thresh3D
 
 	# block matching step
@@ -31,7 +32,8 @@ function bm3d_wie(img::Array{Float64}, imgBasic::Array{Float64}, sigma::Abstract
 
 	# 3D filtering
 	@info "2st 3D filtering"
-	wie_3D_filtering!(Wout, imgOut, G3D, G3Dbasic, img, imgBasic, matchTable, WC, Ilist, Jlist, patchSize, sigma)
+	@views valid_match = matchTable[3, :, :, :] .< threshSimilar	# Determine which matching blocks meet the requirements.
+	wie_3D_filtering!(Wout, imgOut, G3D, G3Dbasic, img, imgBasic, matchTable, valid_match, WC, Ilist, Jlist, patchSize, sigma)
 	
 	return imgOut ./ Wout
 
@@ -47,6 +49,7 @@ function wie_3D_filtering!(Wout::AbstractArray{<:AbstractFloat, 2},
 			img::AbstractArray{<:AbstractFloat, 2},
 			imgBasic::AbstractArray{<:AbstractFloat, 2},
 			matchTable::Array{<:AbstractFloat},
+			vaild_match::BitArray,
 			WC::AbstractArray{<:AbstractFloat},
 			Ilist::Array{Int}, Jlist::Array{Int},
 			patchSize::Array{Int}, sigma::AbstractFloat)
@@ -54,8 +57,8 @@ function wie_3D_filtering!(Wout::AbstractArray{<:AbstractFloat, 2},
 	@views @inbounds for J = 1:length(Jlist)
 		for I = 1:length(Ilist)
 			# Compute 3D group spectrum
-			form_group!(G3D, img, matchTable, Ilist, Jlist, patchSize, (I, J))
-			form_group!(G3Dbasic, imgBasic, matchTable, Ilist, Jlist, patchSize, (I, J))
+			form_group!(G3D, img, matchTable, vaild_match, Ilist, Jlist, patchSize, (I, J))
+			form_group!(G3Dbasic, imgBasic, matchTable, vaild_match, Ilist, Jlist, patchSize, (I, J))
 
 			# Wiener filtering of 3D groups, using basic estimate as target spectrum
 			WC .= @strided G3Dbasic.^2 ./ (G3Dbasic.^2 .+ sigma^2)
@@ -66,8 +69,8 @@ function wie_3D_filtering!(Wout::AbstractArray{<:AbstractFloat, 2},
 			W = T > 0 ? 1.0/T : 1.0
 			G3D .*= W
 
-			invert_group!(imgOut, G3D, matchTable, Ilist, Jlist, patchSize, (I, J))
-			group_to_image!(Wout, W, matchTable, Ilist, Jlist, patchSize, (I, J))
+			invert_group!(imgOut, G3D, matchTable, vaild_match, Ilist, Jlist, patchSize, (I, J))
+			group_to_image!(Wout, W, matchTable, vaild_match, Ilist, Jlist, patchSize, (I, J))
 		end
 	end
 end
@@ -79,11 +82,12 @@ function wie_3D_filtering!(Wout::Array{<:AbstractFloat, 3},
 			img::Array{<:AbstractFloat, 3},
 			imgBasic::Array{<:AbstractFloat, 3},
 			matchTable::Array{<:AbstractFloat},
+			vaild_match::BitArray,
 			WC::Array{<:AbstractFloat},
 			Ilist::Array{Int}, Jlist::Array{Int},
 			patchSize::Array{Int}, sigma::AbstractFloat)
 	@views @inbounds Threads.@threads for i = 1:size(img, 3)
 		wie_3D_filtering!(Wout[:, :, i], imgOut[:, :, i], G3D[:, :, :, i], G3Dbasic[:, :, :, i], img[:, :, i], imgBasic[:, :, i],
-			matchTable, WC[:, :, :, i], Ilist, Jlist, patchSize, sigma)
+			matchTable, vaild_match, WC[:, :, :, i], Ilist, Jlist, patchSize, sigma)
 	end
 end

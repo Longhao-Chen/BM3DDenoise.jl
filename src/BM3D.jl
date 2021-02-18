@@ -27,10 +27,16 @@ return: denoised image
 """
 function bm3d(img, σ::AbstractFloat)
 	config = bm3d_config()	# Use default parameters
+	# Auto adjust threshold.
+	if σ > 40/255
+		config.thr_threshSimilar = 5000/255^2
+		config.wie_threshSimilar = 3500/255^2
+	end
 	bm3d(img, σ, config)
 end
 
 function bm3d(img::Array{Float64}, σ::AbstractFloat, config::bm3d_config)
+	print(config)
 	imgBasic = bm3d_thr(img, σ, config)
 	bm3d_wie(img, imgBasic, σ, config)
 end
