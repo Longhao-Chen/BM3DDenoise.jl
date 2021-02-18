@@ -45,8 +45,8 @@ If you want to customize parameters, see:
 
 ## Reference
 
-> https://github.com/rcrandall/BM3D.jl
-> https://blog.csdn.net/qq_33552519/article/details/108632146
-> http://www.ipol.im/pub/art/2012/l-bm3d/article.pdf
-> https://blog.csdn.net/github_28260175/article/details/81101457
+> https://github.com/rcrandall/BM3D.jl  
+> https://blog.csdn.net/qq_33552519/article/details/108632146  
+> http://www.ipol.im/pub/art/2012/l-bm3d/article.pdf  
+> https://blog.csdn.net/github_28260175/article/details/81101457  
 > https://blog.csdn.net/qq_36955294/article/details/83443317
