@@ -52,3 +52,22 @@ mutable struct bm3d_config
 		2.7
 	)
 end
+
+function print(config::bm3d_config)
+	@info "========================================"
+	@info "|       bm3d config                    |"
+	@info "========================================"
+	@info "| thr_patchSize: $(config.thr_patchSize)"
+	@info "| thr_stepSize: $(config.thr_stepSize)"
+	@info "| thr_nBorder: $(config.thr_nBorder)"
+	@info "| thr_searchWin: $(config.thr_searchWin)"
+	@info "| thr_nMatch: $(config.thr_nMatch)"
+	@info "| thr_thresh3D: $(config.thr_thresh3D)"
+	@info "| wie_patchSize: $(config.wie_patchSize)"
+	@info "| wie_stepSize: $(config.wie_stepSize)"
+	@info "| wie_nBorder: $(config.wie_nBorder)"
+	@info "| wie_searchWin: $(config.wie_searchWin)"
+	@info "| wie_nMatch: $(config.wie_nMatch)"
+	@info "| wie_thresh3D: $(config.wie_thresh3D)"
+	@info "========================================"
+end
