@@ -27,10 +27,13 @@ function match_patches(img::AbstractArray{Float64, 2},
 
 	@inbounds @views Base.Threads.@threads for j1 = 1:N2
 		for i1 = 1:N1
-			for j2 = j1:minimum([N2;j1 + searchWin[2]])
+			j2_end = minimum([N2;j1 + searchWin[2]])
+			for j2 = j1:j2_end
 				# Lower bound on columns
 				LB = (j1 == j2) ? (i1+1) : (i1 - searchWin[1])
-				for i2 = maximum([1,LB]):minimum([i1+searchWin[1];N1])
+				i2_start = maximum([1,LB])
+				i2_end = minimum([i1+searchWin[1];N1])
+				for i2 = i2_start:i2_end
 
 					d2 = norm(img[Ilist[i1]:(patchSize[1]-1+Ilist[i1]), Jlist[j1]:(patchSize[2]-1+Jlist[j1])]
 						.- img[Ilist[i2]:(patchSize[1]-1+Ilist[i2]), Jlist[j2]:(patchSize[2]-1+Jlist[j2])])^2

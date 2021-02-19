@@ -42,8 +42,10 @@ function thr_3D_filtering!(Wout::AbstractArray{<:AbstractFloat, 2},
 			Ilist::Array{Int}, Jlist::Array{Int},
 			patchSize::Array{Int}, thresh3D::AbstractFloat, sigma::AbstractFloat)
 	# Each reference block is processed to reduce memory usage
-	@views @inbounds for J = 1:length(Jlist)
-		for I = 1:length(Ilist)
+	I_end = length(Ilist)
+	J_end = length(Jlist)
+	@views @inbounds for J = 1:J_end
+		for I = 1:I_end
 			form_group!(G3D, img, matchTable, Ilist, Jlist, patchSize, (I, J))
 
 			# Filter 3D groups by hard thresholding 
