@@ -84,6 +84,6 @@ function wie_3D_filtering!(Wout::Array{<:AbstractFloat, 3},
 			patchSize::Array{Int}, sigma::AbstractFloat)
 	@views @inbounds Threads.@threads for i = 1:size(img, 3)
 		wie_3D_filtering!(Wout[:, :, i], imgOut[:, :, i], G3D[:, :, :, i], G3Dbasic[:, :, :, i], img[:, :, i], imgBasic[:, :, i],
-			matchTable, WC[:, :, :, i], Ilist, Jlist, patchSize, sigma)
+			matchTable, vaild_match, WC[:, :, :, i], Ilist, Jlist, patchSize, sigma)
 	end
 end
