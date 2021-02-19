@@ -65,8 +65,8 @@ function wie_3D_filtering!(Wout::AbstractArray{<:AbstractFloat, 2},
 			G3D .*= WC
 
 			# Weight
-			T = norm(WC, 2)
-			W = T > 0 ? 1.0/T : 1.0
+			T = norm(WC, 1)
+			W = T > 0 ? 1.0/(T *sigma^2) : 1.0
 			G3D .*= W
 
 			invert_group!(imgOut, G3D, matchTable, vaild_match, Ilist, Jlist, patchSize, (I, J))
