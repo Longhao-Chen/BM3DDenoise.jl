@@ -4,7 +4,7 @@ An implementation of the BM3D denoising algorithm for Julia.
 
 ## Installation
 
-Within Julia, use the [package manager][pkg]:
+Within Julia, use the Pkg:
 ```julia
 using Pkg
 Pkg.add("https://github.com/Longhao-Chen/BM3D.jl.git")
@@ -36,12 +36,32 @@ If you want to customize parameters, see:
 ?bm3d_config
 ```
 
+### Noise estimator
+
+For the image that does not know the noise variance, we can use [Wavelets.jl](https://github.com/JuliaDSP/Wavelets.jl/) to make noise estimation.
+
+```julia
+using Pkg; Pkg.add("Wavelets")
+using Wavelets
+using Images
+
+noise_img = load("image_path")
+
+# Convert to YCrCb color space for estimation
+noise_img = YCbCr.(noise_img)
+noise_img_y = channelview(img_y)[1,:,:]	# Extract y channel.
+# normalization
+noise_img_y .-= 16.
+noise_img_y ./= (235. - 16.)
+
+noise_variance = Threshold.noisest(noise_img_y)
+```
 
 ## Todo
 
 - [x] Add color image support
 - [ ] Performance optimization
-- [ ] Add noise variance estimation
+- [ ] ~~Add noise variance estimation~~
 
 ## Reference
 
