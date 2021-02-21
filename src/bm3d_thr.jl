@@ -22,11 +22,10 @@ function bm3d_thr(img::Array{Float64}, sigma::AbstractFloat, config::bm3d_config
 
 	Wout = zeros(Float64, size(img))
 	imgOut = zeros(Float64, size(img))
-	G3D = zeros(Float64, nMatch+1, patchSize[1], patchSize[2], axes(img)[3:end]...)
 
 	# 3D filtering
 	@info "1st 3D filtering"
-	thr_3D_filtering!(Wout, imgOut, G3D, img, matchTable, Ilist, Jlist, patchSize, thresh3D, sigma)
+	thr_3D_filtering!(Wout, imgOut, img, matchTable, Ilist, Jlist, patchSize, searchWin, nMatch, thresh3D, sigma)
 
 	return imgOut ./ Wout
 end
@@ -36,28 +35,32 @@ end
 """
 function thr_3D_filtering!(Wout::AbstractArray{<:AbstractFloat, 2},
 			imgOut::AbstractArray{<:AbstractFloat, 2},
-			G3D::AbstractArray{<:AbstractFloat, 3},
 			img::AbstractArray{<:AbstractFloat, 2},
 			matchTable::Array{<:AbstractFloat},
 			Ilist::Array{Int}, Jlist::Array{Int},
-			patchSize::Array{Int}, thresh3D::AbstractFloat, sigma::AbstractFloat)
+			patchSize::Array{Int}, searchWin::Array{Int},
+			nMatch::Int, thresh3D::AbstractFloat, sigma::AbstractFloat)
 	# Each reference block is processed to reduce memory usage
 	I_end = length(Ilist)
 	J_end = length(Jlist)
-	@views @inbounds for J = 1:J_end
-		for I = 1:I_end
-			form_group!(G3D, img, matchTable, Ilist, Jlist, patchSize, (I, J))
+	# Preventing conflicts in parallel computing
+	@views @inbounds for offset in 0:2searchWin[2] - 1
+		Threads.@threads for J = 1 + offset:2searchWin[2]:J_end
+			G3D = zeros(Float64, nMatch+1, patchSize[1], patchSize[2])
+			for I = 1:I_end
+				form_group!(G3D, img, matchTable, Ilist, Jlist, patchSize, (I, J))
 
-			# Filter 3D groups by hard thresholding 
-			HardThresholding!(G3D, sigma * thresh3D)
+				# Filter 3D groups by hard thresholding
+				HardThresholding!(G3D, sigma * thresh3D)
 
-			T = nnz(G3D)
-			W = T > 0 ? 1.0 / (T * sigma^2) : 1.0
-			G3D .*= W
+				T = nnz(G3D)
+				W = T > 0 ? 1.0 / (T * sigma^2) : 1.0
+				G3D .*= W
 
-			invert_group!(imgOut, G3D, matchTable, Ilist, Jlist, patchSize, (I, J)) 
-			group_to_image!(Wout, W, matchTable, Ilist, Jlist, patchSize, (I, J))
+				invert_group!(imgOut, G3D, matchTable, Ilist, Jlist, patchSize, (I, J))
+				group_to_image!(Wout, W, matchTable, Ilist, Jlist, patchSize, (I, J))
 
+			end
 		end
 	end
 end
@@ -65,13 +68,13 @@ end
 # For color images
 function thr_3D_filtering!(Wout::Array{<:AbstractFloat, 3},
 	imgOut::Array{<:AbstractFloat, 3},
-	G3D::Array{<:AbstractFloat, 4},
 	img::Array{<:AbstractFloat, 3},
 	matchTable::Array{<:AbstractFloat},
 	Ilist::Array{Int}, Jlist::Array{Int},
-	patchSize::Array{Int}, thresh3D::AbstractFloat, sigma::AbstractFloat)
+	patchSize::Array{Int}, searchWin::Array{Int},
+	nMatch::Int, thresh3D::AbstractFloat, sigma::AbstractFloat)
 	@views @inbounds Threads.@threads for i = 1:size(img, 3)
-		thr_3D_filtering!(Wout[:, :, i], imgOut[:, :, i], G3D[:, :, :, i], img[:, :, i], matchTable, Ilist, Jlist, patchSize, thresh3D, sigma)
+		thr_3D_filtering!(Wout[:, :, i], imgOut[:, :, i], img[:, :, i], matchTable, Ilist, Jlist, patchSize, searchWin, nMatch, thresh3D, sigma)
 	end
 end
 
