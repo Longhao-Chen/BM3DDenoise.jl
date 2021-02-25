@@ -16,11 +16,11 @@ function PSNR(img1::Matrix{Gray{T1}}, img2::Matrix{Gray{T2}}) where {T1, T2}
 end
 
 function PSNR(img1::Matrix{RGB{T1}}, img2::Matrix{RGB{T2}}) where {T1, T2}
-	MSE_mean = Statistics.mean(
+	MSE_mean = Statistics.mean([
 		MSE(Float64.(red.(img1)), Float64.(red.(img2))),
 		MSE(Float64.(green.(img1)), Float64.(green.(img2))),
 		MSE(Float64.(blue.(img1)), Float64.(blue.(img2))),
-		)
+	])
 	10 * log10(1 / MSE_mean)
 end
 
