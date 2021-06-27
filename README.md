@@ -1,4 +1,5 @@
 # BM3D.jl
+![](https://github.com/Longhao-Chen/BM3D.jl/workflows/Unit%20test/badge.svg)
 
 An implementation of the BM3D denoising algorithm for Julia.
 
