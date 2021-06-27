@@ -66,7 +66,7 @@ noise_variance = Threshold.noisest(noise_img_y)
 
 ## Reference
 
-> https://webpages.tuni.fi/foi/GCF-BM3D/
+> https://webpages.tuni.fi/foi/GCF-BM3D/  
 > https://github.com/rcrandall/BM3D.jl  
 > https://blog.csdn.net/qq_33552519/article/details/108632146  
 > http://www.ipol.im/pub/art/2012/l-bm3d/article.pdf  
