@@ -4,7 +4,7 @@ export bm3d, bm3d_config
 import FFTW
 using LinearAlgebra
 using Strided
-using Images
+using ImageCore
 
 include("parameter.jl")
 include("bm3d_thr.jl")
