@@ -8,7 +8,7 @@ An implementation of the BM3D(sparse 3D transform-domain collaborative filtering
 Within Julia, use the Pkg:
 ```julia
 using Pkg
-Pkg.add("https://github.com/Longhao-Chen/BM3D.jl.git")
+Pkg.add(url = "https://github.com/Longhao-Chen/BM3D.jl.git")
 ```
 
 ## Usage
