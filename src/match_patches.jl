@@ -1,81 +1,135 @@
 """
 	match_patches(img::AbstractArray{Float64},
-			Ilist::Vector{Int64},
-			Jlist::Vector{Int64},
-			patchSize::Vector{Int64},
-			searchWin::Vector{Int64},
-			nMatch::Int64)
+			refIndex::Array{CartesianIndex{2},2},
+			patchSize::CartesianIndex{2},
+			searchWindow::CartesianIndex{2},
+			nMatch::Int64,
+			distF::Function)
 
 Full-search block matching algorithm for BM3D
 """
-function match_patches(img::AbstractArray{Float64, 2},
-			Ilist::Vector{Int64},
-			Jlist::Vector{Int64},
-			patchSize::Vector{Int64},
-			searchWin::Vector{Int64},
-			nMatch::Int64)
+function match_patches(
+	img::AbstractArray{Float64,2},
+	refIndex::Array{CartesianIndex{2},2},
+	patchSize::CartesianIndex{2},
+	searchWindow::CartesianIndex{2},
+	nMatch::Int64,
+	distF::Function,
+)
 
-	# Dimensions of patch table
-	N1 = length(Ilist)
-	N2 = length(Jlist)
+	refIndexH, refIndexW = size(refIndex)
 
-	# Allocate 
-	matchTable = zeros(Float64,(3,nMatch,N1,N2))
-	matchMaxTable = ones(Float64,(2,N1,N2))
-	matchTable[3,:,:,:] .= typemax(Float64)
-	matchMaxTable[2,:,:] .= typemax(Float64)
+	matches = Array{CartesianIndex{2}}(undef, refIndexH, refIndexW, nMatch)
 
-	@inbounds @views Base.Threads.@threads for j1 = 1:N2
-		for i1 = 1:N1
-			j2_end = minimum([N2;j1 + searchWin[2]])
-			for j2 = j1:j2_end
-				# Lower bound on columns
-				LB = (j1 == j2) ? (i1+1) : (i1 - searchWin[1])
-				i2_start = maximum([1,LB])
-				i2_end = minimum([i1+searchWin[1];N1])
-				for i2 = i2_start:i2_end
+	dist = Array{Float64}(undef, refIndexH, refIndexW, nMatch + 1)# dist[i, j, end] is the largest item in current dist[i, j, 1:end-1]
+	dist .= typemax(Float64)
 
-					d2 = norm(img[Ilist[i1]:(patchSize[1]-1+Ilist[i1]), Jlist[j1]:(patchSize[2]-1+Jlist[j1])]
-						.- img[Ilist[i2]:(patchSize[1]-1+Ilist[i2]), Jlist[j2]:(patchSize[2]-1+Jlist[j2])])^2
-					d2 /= prod(patchSize)
+	maxDistMatch = Array{UInt}(undef, refIndexH, refIndexW)# maxDistMatch[i, j] is the position in matches[i, j, :] corresponding to the largest distance block
+	maxDistMatch .= 1
 
-					# Check current maximum for patch (i1,j1)
-					if d2 < matchMaxTable[2,i1,j1]
-						kmatch = Int(matchMaxTable[1,i1,j1])
-						matchTable[1, kmatch, i1, j1] = i2 - i1
-						matchTable[2, kmatch, i1, j1] = j2 - j1
-						matchTable[3, kmatch, i1, j1] = d2
+	lockPool = Array{ReentrantLock}(undef, refIndexH, refIndexW)
+	for i in length(lockPool)
+		lockPool[i] = ReentrantLock()
+	end
 
-						(tmp2,tmp1) = findmax(matchTable[3,:,i1,j1])
-						matchMaxTable[1,i1,j1] = tmp1
-						matchMaxTable[2,i1,j1] = tmp2
+
+	@inbounds Threads.@threads for j = 1:refIndexW
+		for i = 1:refIndexH
+			p = @view refIndex[i, j]
+			iE = min(refIndexH, i + searchWindow[1])
+			jE = min(refIndexW, j + searchWindow[2])
+			imgRef = @view img[p:p+patchSize]
+
+			# In order to skip the current block and save unnecessary judgment, it is split into three parts.
+			for sj = (j+1):jE, si = (i+1):iE
+				@views weight = distF(
+					imgRef,
+					img[refIndex[si, sj]:(refIndex[si, sj]+patchSize)],
+				)
+				lock(lockPool[i, j]) do
+					if weight < dist[i, j, nMatch+1]
+						maxDistImg = maxDistMatch[i, j]
+						matches[i, j, maxDistImg] = refIndex[si, sj]
+						dist[i, j, maxDistImg] = weight
+						dist[i, j, nMatch+1], maxDistMatch[i, j] =
+							findmax(dist[i, j, 1:nMatch])
 					end
+				end
 
-					# Check current maximum for patch (i2,j2)
-					if d2 < matchMaxTable[2,i2,j2]
-						kmatch = Int(matchMaxTable[1,i2,j2])
-						matchTable[1, kmatch, i2, j2] = i1 - i2
-						matchTable[2, kmatch, i2, j2] = j1 - j2
-						matchTable[3, kmatch, i2, j2] = d2
+				lock(lockPool[si, sj]) do
+					if weight < dist[si, sj, nMatch+1]
+						maxDistImg = maxDistMatch[si, sj]
+						matches[si, sj, maxDistImg] = p
+						dist[si, sj, maxDistImg] = weight
+						dist[si, sj, nMatch+1],
+						maxDistMatch[si, sj] =
+							findmax(dist[si, sj, 1:nMatch])
+					end
+				end
+			end
+			for si = (i+1):iE
+				weight = distF(
+					imgRef,
+					img[refIndex[si, j]:(refIndex[si, j]+patchSize)],
+				)
+				lock(lockPool[i, j]) do
+					if weight < dist[i, j, nMatch+1]
+						maxDistImg = maxDistMatch[i, j]
+						matches[i, j, maxDistImg] = refIndex[si, j]
+						dist[i, j, maxDistImg] = weight
+						dist[i, j, nMatch+1], maxDistMatch[i, j] =
+							findmax(dist[i, j, 1:nMatch])
+					end
+				end
 
-						(tmp2,tmp1) = findmax(matchTable[3, :, i2, j2])
-						matchMaxTable[1, i2, j2] = tmp1
-						matchMaxTable[2, i2, j2] = tmp2
+				lock(lockPool[si, j]) do
+					if weight < dist[si, j, nMatch+1]
+						maxDistImg = maxDistMatch[si, sj]
+						matches[si, j, maxDistImg] = p
+						dist[si, j, maxDistImg] = weight
+						dist[si, j, nMatch+1], maxDistMatch[si, j] =
+							findmax(dist[si, j, 1:nMatch])
+					end
+				end
+			end
+			for sj = (j+1):jE
+				weight = distF(
+					imgRef,
+					img[refIndex[i, sj]:(refIndex[i, sj]+patchSize)],
+				)
+				lock(lockPool[i, j]) do
+					if weight < dist[i, j, nMatch+1]
+						maxDistImg = maxDistMatch[i, j]
+						matches[i, j, maxDistImg] = refIndex[i, sj]
+						dist[i, j, maxDistImg] = weight
+						dist[i, j, nMatch+1], maxDistMatch[i, j] =
+							findmax(dist[i, j, 1:nMatch])
+					end
+				end
+
+				lock(lockPool[si, j]) do
+					if weight < dist[i, sj, nMatch+1]
+						maxDistImg = maxDistMatch[i, sj]
+						matches[i, sj, maxDistImg] = p
+						dist[i, sj, maxDistImg] = weight
+						dist[i, sj, nMatch+1], maxDistMatch[i, sj] =
+							findmax(dist[i, sj, 1:nMatch])
 					end
 				end
 			end
 		end
 	end
-
-	return matchTable
+	matches
 end
 
 # For color images
-function match_patches(img::Array{Float64, 3},
-			Ilist::Vector{Int64},
-			Jlist::Vector{Int64},
-			patchSize::Vector{Int64},
-			searchWin::Vector{Int64},
-			nMatch::Int64)
-	match_patches(view(img, :, :, 1), Ilist, Jlist, patchSize, searchWin, nMatch)
+function match_patches(
+	img::Array{Float64,3},
+	refIndex::Array{CartesianIndex{2},2},
+	patchSize::CartesianIndex{2},
+	searchWindow::CartesianIndex{2},
+	nMatch::Int64,
+	distF::Function,
+)
+	match_patches(view(img, :, :, 1), refIndex, patchSize, searchWindow, nMatch, distF)
 end
