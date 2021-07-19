@@ -28,91 +28,96 @@ function match_patches(
 	maxDistMatch .= 1
 
 	lockPool = Array{ReentrantLock}(undef, refIndexH, refIndexW)
-	for i in length(lockPool)
+	for i in 1:length(lockPool)
 		lockPool[i] = ReentrantLock()
 	end
 
 
-	@inbounds Threads.@threads for j = 1:refIndexW
-		for i = 1:refIndexH
-			p = @view refIndex[i, j]
+	@inbounds Threads.@threads for j in 1:refIndexW
+		for i in 1:refIndexH
+			p = refIndex[i, j]
 			iE = min(refIndexH, i + searchWindow[1])
 			jE = min(refIndexW, j + searchWindow[2])
-			imgRef = @view img[p:p+patchSize]
+			imgRef = @view img[p:(p + patchSize - CartesianIndex(1, 1))]
 
 			# In order to skip the current block and save unnecessary judgment, it is split into three parts.
-			for sj = (j+1):jE, si = (i+1):iE
+			for sj in (j + 1):jE, si in (i + 1):iE
 				@views weight = distF(
 					imgRef,
-					img[refIndex[si, sj]:(refIndex[si, sj]+patchSize)],
+					img[refIndex[si, sj]:(refIndex[
+						si,
+						sj,
+					] + patchSize - CartesianIndex(1, 1))],
 				)
 				lock(lockPool[i, j]) do
-					if weight < dist[i, j, nMatch+1]
+					if weight < dist[i, j, nMatch + 1]
 						maxDistImg = maxDistMatch[i, j]
 						matches[i, j, maxDistImg] = refIndex[si, sj]
 						dist[i, j, maxDistImg] = weight
-						dist[i, j, nMatch+1], maxDistMatch[i, j] =
+						dist[i, j, nMatch + 1], maxDistMatch[i, j] =
 							findmax(dist[i, j, 1:nMatch])
 					end
 				end
 
 				lock(lockPool[si, sj]) do
-					if weight < dist[si, sj, nMatch+1]
+					if weight < dist[si, sj, nMatch + 1]
 						maxDistImg = maxDistMatch[si, sj]
 						matches[si, sj, maxDistImg] = p
 						dist[si, sj, maxDistImg] = weight
-						dist[si, sj, nMatch+1],
+						dist[si, sj, nMatch + 1],
 						maxDistMatch[si, sj] =
 							findmax(dist[si, sj, 1:nMatch])
 					end
 				end
 			end
-			for si = (i+1):iE
+			for si in (i + 1):iE
 				weight = distF(
 					imgRef,
-					img[refIndex[si, j]:(refIndex[si, j]+patchSize)],
+					img[refIndex[si, j]:(refIndex[si, j] + patchSize - CartesianIndex(1, 1))],
 				)
 				lock(lockPool[i, j]) do
-					if weight < dist[i, j, nMatch+1]
+					if weight < dist[i, j, nMatch + 1]
 						maxDistImg = maxDistMatch[i, j]
 						matches[i, j, maxDistImg] = refIndex[si, j]
 						dist[i, j, maxDistImg] = weight
-						dist[i, j, nMatch+1], maxDistMatch[i, j] =
+						dist[i, j, nMatch + 1], maxDistMatch[i, j] =
 							findmax(dist[i, j, 1:nMatch])
 					end
 				end
 
 				lock(lockPool[si, j]) do
-					if weight < dist[si, j, nMatch+1]
-						maxDistImg = maxDistMatch[si, sj]
+					if weight < dist[si, j, nMatch + 1]
+						maxDistImg = maxDistMatch[si, j]
 						matches[si, j, maxDistImg] = p
 						dist[si, j, maxDistImg] = weight
-						dist[si, j, nMatch+1], maxDistMatch[si, j] =
+						dist[si, j, nMatch + 1],
+						maxDistMatch[si, j] =
 							findmax(dist[si, j, 1:nMatch])
 					end
 				end
 			end
-			for sj = (j+1):jE
+			for sj in (j + 1):jE
 				weight = distF(
 					imgRef,
-					img[refIndex[i, sj]:(refIndex[i, sj]+patchSize)],
+					img[refIndex[i, sj]:(refIndex[i, sj] + patchSize - CartesianIndex(1, 1))],
 				)
 				lock(lockPool[i, j]) do
-					if weight < dist[i, j, nMatch+1]
+					if weight < dist[i, j, nMatch + 1]
 						maxDistImg = maxDistMatch[i, j]
 						matches[i, j, maxDistImg] = refIndex[i, sj]
 						dist[i, j, maxDistImg] = weight
-						dist[i, j, nMatch+1], maxDistMatch[i, j] =
+						dist[i, j, nMatch + 1], maxDistMatch[i, j] =
 							findmax(dist[i, j, 1:nMatch])
 					end
 				end
 
-				lock(lockPool[si, j]) do
-					if weight < dist[i, sj, nMatch+1]
+				lock(lockPool[i, sj]) do
+					if weight < dist[i, sj, nMatch + 1]
 						maxDistImg = maxDistMatch[i, sj]
 						matches[i, sj, maxDistImg] = p
 						dist[i, sj, maxDistImg] = weight
-						dist[i, sj, nMatch+1], maxDistMatch[i, sj] =
+						dist[i, sj, nMatch + 1],
+						maxDistMatch[i, sj] =
 							findmax(dist[i, sj, 1:nMatch])
 					end
 				end
