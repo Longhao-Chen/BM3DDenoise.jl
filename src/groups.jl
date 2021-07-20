@@ -25,12 +25,12 @@ function form_group!(
 	image_to_group!(img, G3D, matchTable, refIndex, patchSize, position)
 
 	# Apply 2D transform
-	@inbounds @views Threads.@threads for k in 1:size(G3D, 1)
+	@inbounds @views for k in 1:size(G3D, 1)
 		transform_2D!(G3D[k, :, :])
 	end
 
 	# Apply 1D transform
-	@inbounds @views Threads.@threads for j in 1:patchSize[2]
+	@inbounds @views for j in 1:patchSize[2]
 		for i in 1:patchSize[1]
 			transform_1D!(G3D[:, i, j])
 		end
@@ -61,14 +61,14 @@ function invert_group!(
 )
 
 	# Apply inverse 1D transform
-	@inbounds @views Threads.@threads for j in 1:patchSize[2]
+	@inbounds @views for j in 1:patchSize[2]
 		for i in 1:patchSize[1]
 			itransform_1D!(G3D[:, i, j])
 		end
 	end
 
 	# Apply inverse 2D transform
-	@inbounds @views Threads.@threads for k in 1:size(G3D, 1)
+	@inbounds @views for k in 1:size(G3D, 1)
 		itransform_2D!(G3D[k, :, :])
 	end
 
@@ -95,19 +95,19 @@ function group_to_image!(
 	position::CartesianIndex{2},
 )
 
-	Nmatch = size(matchTable, 3)
+	nMatch = size(matchTable, 3)
 
 	@views img[refIndex[position]:(patchSize - CartesianIndex(
 		1,
 		1,
-	) + refIndex[position])] .+= G3D[1, 1:patchSize[1], 1:patchSize[2]]
+	) + refIndex[position])] .+= G3D[1, :, :]
 
-	@inbounds @views for k in 1:Nmatch
-		position2 = position + matchTable[position, k]
-		img[refIndex[position2]:(patchSize - CartesianIndex(
+	@inbounds @views for k in 1:nMatch
+		position2 = matchTable[position, k]
+		img[position2:(patchSize - CartesianIndex(
 			1,
 			1,
-		) + refIndex[position2])] .+= G3D[k + 1, 1:patchSize[1], 1:patchSize[2]]
+		) + position2)] .+= G3D[k + 1, :, :]
 	end
 end
 
@@ -136,11 +136,11 @@ function group_to_image!(
 	) + refIndex[position])] .+= W
 
 	@inbounds @views for k in 1:nMatch
-		position2 = position + matchTable[position, k]
-		img[refIndex[position2]:(patchSize - CartesianIndex(
+		position2 = matchTable[position, k]
+		img[position2:(patchSize - CartesianIndex(
 			1,
 			1,
-		) + refIndex[position2])] .+= W
+		) + position2)] .+= W
 	end
 end
 
@@ -164,18 +164,18 @@ function image_to_group!(
 
 	nMatch = size(matchTable, 3)
 
-	@views G3D[1, CartesianIndex(1, 1):patchSize] .=
+	@views G3D[1, :, :] .=
 		img[refIndex[position]:(patchSize - CartesianIndex(
 			1,
 			1,
 		) + refIndex[position])]
 
 	@views @inbounds for k in 1:nMatch
-		position2 = position + matchTable[position, k]
-		G3D[k + 1, CartesianIndex(1, 1) + patchSize] .=
-			img[refIndex[position2]:(patchSize - CartesianIndex(
+		position2 = matchTable[position, k]
+		G3D[k + 1, :, :] .=
+			img[position2:(patchSize - CartesianIndex(
 				1,
 				1,
-			) + refIndex[position2])]
+			) + position2)]
 	end
 end
