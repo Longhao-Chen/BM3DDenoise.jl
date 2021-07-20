@@ -3,7 +3,6 @@ export bm3d, bm3d_config
 
 import FFTW
 using LinearAlgebra
-using Strided
 using ImageCore
 
 include("parameter.jl")
@@ -19,14 +18,15 @@ include("match_patches.jl")
 	bm3d(img, σ, config)
 
 ```
-img: input grayscale image(Float64 or Gray)
+img: input grayscale image(Float64 or Gray or YCbCr or RGB)
 σ: known or assumed standard deviation of noise
 config: see bm3d_config.
 return: denoised image
 ```
 """
 function bm3d(img, σ::AbstractFloat)
-	config = bm3d_config()	# Use default parameters
+	# Use default parameters
+	config = bm3d_config()
 	bm3d(img, σ, config)
 end
 
@@ -44,20 +44,20 @@ end
 # Here is the color image
 function bm3d(img::Matrix{YCbCr{T}}, σ::AbstractFloat, config::bm3d_config) where {T}
 	# Split into 3-dimensional array, each dimension data is:[:, :, 1] - Y; [:, :, 2] - Cb; [:, :, 3] -Cr
-	img_Array = permutedims(Float64.(channelview(img)),[2,3,1])
+	img_Array = permutedims(Float64.(channelview(img)), [2, 3, 1])
 	# normalization
-	@strided img_Array .-= 16.
-	@strided img_Array[:, :, 1] ./= (235. - 16.)
-	@strided img_Array[:, :, 2:3] ./= (240. - 16.)
+	img_Array .-= 16.0
+	img_Array[:, :, 1] ./= (235.0 - 16.0)
+	img_Array[:, :, 2:3] ./= (240.0 - 16.0)
 
 	img_Array .= bm3d(img_Array, σ, config)
 
 	# Return to the original range
-	@strided img_Array[:, :, 1] .*= (235. - 16.)
-	@strided img_Array[:, :, 2:3] .*= (240. - 16.)
-	@strided img_Array .+= 16.
+	img_Array[:, :, 1] .*= (235.0 - 16.0)
+	img_Array[:, :, 2:3] .*= (240.0 - 16.0)
+	img_Array .+= 16.0
 
-	colorview(YCbCr, permutedims(T.(img_Array),[3,1,2]))
+	colorview(YCbCr, permutedims(T.(img_Array), [3, 1, 2]))
 end
 
 function bm3d(img::Matrix{RGB{T}}, σ::AbstractFloat, config::bm3d_config) where {T}
