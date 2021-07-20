@@ -45,7 +45,8 @@ end
 				patchSize::CartesianIndex{2},
 				position::CartesianIndex{2},
 				itransform_1D!::Function,
-				itransform_2D!::Function)
+				itransform_2D!::Function,
+				imgLockPool::Array{ReentrantLock})
 
 Inverse BM3D groupings
 """
@@ -58,6 +59,7 @@ function invert_group!(
 	position::CartesianIndex{2},
 	itransform_1D!::Function,
 	itransform_2D!::Function,
+	imgLockPool::Array{ReentrantLock},
 )
 
 	# Apply inverse 1D transform
@@ -72,7 +74,7 @@ function invert_group!(
 		itransform_2D!(G3D[k, :, :])
 	end
 
-	group_to_image!(img, G3D, matchTable, refIndex, patchSize, position)
+	group_to_image!(img, G3D, matchTable, refIndex, patchSize, position, imgLockPool)
 
 end
 
@@ -82,7 +84,8 @@ end
 			matchTable::Array{CartesianIndex{2},3},
 			refIndex::Array{CartesianIndex{2},2},
 			patchSize::CartesianIndex{2},
-			position::CartesianIndex{2})
+			position::CartesianIndex{2},
+			imgLockPool::Array{ReentrantLock})
 
 group to image
 """
@@ -93,21 +96,26 @@ function group_to_image!(
 	refIndex::Array{CartesianIndex{2},2},
 	patchSize::CartesianIndex{2},
 	position::CartesianIndex{2},
+	imgLockPool::Array{ReentrantLock},
 )
 
 	nMatch = size(matchTable, 3)
 
-	@views img[refIndex[position]:(patchSize - CartesianIndex(
-		1,
-		1,
-	) + refIndex[position])] .+= G3D[1, :, :]
+	lock(imgLockPool[position]) do
+		@views img[refIndex[position]:(patchSize - CartesianIndex(
+			1,
+			1,
+		) + refIndex[position])] .+= G3D[1, :, :]
+	end
 
 	@inbounds @views for k in 1:nMatch
 		position2 = matchTable[position, k]
-		img[position2:(patchSize - CartesianIndex(
-			1,
-			1,
-		) + position2)] .+= G3D[k + 1, :, :]
+		lock(imgLockPool[position2]) do
+			img[refIndex[position2]:(patchSize - CartesianIndex(
+				1,
+				1,
+			) + refIndex[position2])] .+= G3D[k + 1, :, :]
+		end
 	end
 end
 
@@ -117,7 +125,8 @@ end
 			matchTable::Array{CartesianIndex{2},3},
 			refIndex::Array{CartesianIndex{2},2},
 			patchSize::CartesianIndex{2},
-			position::CartesianIndex{2})
+			position::CartesianIndex{2},
+			imgLockPool::Array{ReentrantLock})
 """
 function group_to_image!(
 	img::AbstractArray{Float64,2},
@@ -126,21 +135,26 @@ function group_to_image!(
 	refIndex::Array{CartesianIndex{2},2},
 	patchSize::CartesianIndex{2},
 	position::CartesianIndex{2},
+	imgLockPool::Array{ReentrantLock},
 )
 
 	nMatch = size(matchTable, 3)
 
-	@views img[refIndex[position]:(patchSize - CartesianIndex(
-		1,
-		1,
-	) + refIndex[position])] .+= W
+	lock(imgLockPool[position]) do
+		@views img[refIndex[position]:(patchSize - CartesianIndex(
+			1,
+			1,
+		) + refIndex[position])] .+= W
+	end
 
 	@inbounds @views for k in 1:nMatch
 		position2 = matchTable[position, k]
-		img[position2:(patchSize - CartesianIndex(
-			1,
-			1,
-		) + position2)] .+= W
+		lock(imgLockPool[position2]) do
+			img[refIndex[position2]:(patchSize - CartesianIndex(
+				1,
+				1,
+			) + refIndex[position2])] .+= W
+		end
 	end
 end
 
@@ -173,9 +187,9 @@ function image_to_group!(
 	@views @inbounds for k in 1:nMatch
 		position2 = matchTable[position, k]
 		G3D[k + 1, :, :] .=
-			img[position2:(patchSize - CartesianIndex(
+			img[refIndex[position2]:(patchSize - CartesianIndex(
 				1,
 				1,
-			) + position2)]
+			) + refIndex[position2])]
 	end
 end

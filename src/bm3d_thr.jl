@@ -32,8 +32,9 @@ function bm3d_thr(img::Array{Float64}, sigma::AbstractFloat, config::bm3d_config
 	)
 	@info "1st match_patches end"
 
-	Wout = similar(img)
-	imgOut = similar(img)
+	# Don't use similar(), because it need initialize to 0.0
+	Wout = zeros(Float64, size(img)...)
+	imgOut = zeros(Float64, size(img)...)
 
 	# 3D filtering
 	@info "1st 3D filtering"
@@ -72,6 +73,12 @@ function thr_3D_filtering!(
 	# Each reference block is processed to reduce memory usage
 	I_end, J_end = size(refIndex)
 
+	# Preventing conflicts in group_to_image!
+	imgLockPool = Array{ReentrantLock}(undef, I_end, J_end)
+	for i in 1:length(imgLockPool)
+		imgLockPool[i] = ReentrantLock()
+	end
+
 	@views @inbounds Threads.@threads for J in 1:J_end
 		# Preventing conflicts in parallel computing
 		G3D = zeros(Float64, nMatch + 1, patchSize[1], patchSize[2])
@@ -107,6 +114,7 @@ function thr_3D_filtering!(
 				CartesianIndex(I, J),
 				config.thr_itransform_1D!,
 				config.thr_itransform_2D!,
+				imgLockPool,
 			)
 			group_to_image!(
 				Wout,
@@ -115,6 +123,7 @@ function thr_3D_filtering!(
 				refIndex,
 				patchSize,
 				CartesianIndex(I, J),
+				imgLockPool,
 			)
 		end
 	end

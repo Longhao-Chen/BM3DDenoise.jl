@@ -37,8 +37,9 @@ function bm3d_wie(
 	)
 	@info "2st match_patches end"
 
-	Wout = similar(img)
-	imgOut = similar(img)
+	# Don't use similar(), because it need initialize to 0.0
+	Wout = zeros(Float64, size(img)...)
+	imgOut = zeros(Float64, size(img)...)
 
 	# 3D filtering
 	@info "2st 3D filtering"
@@ -77,6 +78,12 @@ function wie_3D_filtering!(
 )
 	# Each reference block is processed to reduce memory usage
 	I_end, J_end = size(refIndex)
+
+	# Preventing conflicts in group_to_image!
+	imgLockPool = Array{ReentrantLock}(undef, I_end, J_end)
+	for i in 1:length(imgLockPool)
+		imgLockPool[i] = ReentrantLock()
+	end
 
 	@views @inbounds Threads.@threads for J in 1:J_end
 		# Preventing conflicts in parallel computing
@@ -128,6 +135,7 @@ function wie_3D_filtering!(
 				CartesianIndex(I, J),
 				config.wie_itransform_1D!,
 				config.wie_itransform_2D!,
+				imgLockPool,
 			)
 			group_to_image!(
 				Wout,
@@ -136,6 +144,7 @@ function wie_3D_filtering!(
 				refIndex,
 				patchSize,
 				CartesianIndex(I, J),
+				imgLockPool,
 			)
 		end
 	end

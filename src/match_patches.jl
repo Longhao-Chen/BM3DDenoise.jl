@@ -52,7 +52,7 @@ function match_patches(
 				lock(lockPool[i, j]) do
 					if weight < dist[i, j, nMatch + 1]
 						maxDistImg = maxDistMatch[i, j]
-						matches[i, j, maxDistImg] = refIndex[si, sj]
+						matches[i, j, maxDistImg] = CartesianIndex(si, sj)
 						dist[i, j, maxDistImg] = weight
 						dist[i, j, nMatch + 1], maxDistMatch[i, j] =
 							findmax(dist[i, j, 1:nMatch])
@@ -62,7 +62,7 @@ function match_patches(
 				lock(lockPool[si, sj]) do
 					if weight < dist[si, sj, nMatch + 1]
 						maxDistImg = maxDistMatch[si, sj]
-						matches[si, sj, maxDistImg] = p
+						matches[si, sj, maxDistImg] = CartesianIndex(i, j)
 						dist[si, sj, maxDistImg] = weight
 						dist[si, sj, nMatch + 1],
 						maxDistMatch[si, sj] =
@@ -78,7 +78,7 @@ function match_patches(
 				lock(lockPool[i, j]) do
 					if weight < dist[i, j, nMatch + 1]
 						maxDistImg = maxDistMatch[i, j]
-						matches[i, j, maxDistImg] = refIndex[si, j]
+						matches[i, j, maxDistImg] = CartesianIndex(si, j)
 						dist[i, j, maxDistImg] = weight
 						dist[i, j, nMatch + 1], maxDistMatch[i, j] =
 							findmax(dist[i, j, 1:nMatch])
@@ -88,7 +88,7 @@ function match_patches(
 				lock(lockPool[si, j]) do
 					if weight < dist[si, j, nMatch + 1]
 						maxDistImg = maxDistMatch[si, j]
-						matches[si, j, maxDistImg] = p
+						matches[si, j, maxDistImg] = CartesianIndex(i, j)
 						dist[si, j, maxDistImg] = weight
 						dist[si, j, nMatch + 1],
 						maxDistMatch[si, j] =
@@ -104,7 +104,7 @@ function match_patches(
 				lock(lockPool[i, j]) do
 					if weight < dist[i, j, nMatch + 1]
 						maxDistImg = maxDistMatch[i, j]
-						matches[i, j, maxDistImg] = refIndex[i, sj]
+						matches[i, j, maxDistImg] = CartesianIndex(i, sj)
 						dist[i, j, maxDistImg] = weight
 						dist[i, j, nMatch + 1], maxDistMatch[i, j] =
 							findmax(dist[i, j, 1:nMatch])
@@ -114,7 +114,7 @@ function match_patches(
 				lock(lockPool[i, sj]) do
 					if weight < dist[i, sj, nMatch + 1]
 						maxDistImg = maxDistMatch[i, sj]
-						matches[i, sj, maxDistImg] = p
+						matches[i, sj, maxDistImg] = CartesianIndex(i, j)
 						dist[i, sj, maxDistImg] = weight
 						dist[i, sj, nMatch + 1],
 						maxDistMatch[i, sj] =
