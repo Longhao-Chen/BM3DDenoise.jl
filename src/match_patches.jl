@@ -6,7 +6,7 @@
 			nMatch::Int64,
 			distF::Function)
 
-Full-search block matching algorithm for BM3D
+Full-search block matching algorithm for BM3DDenoise
 """
 function match_patches(
 	img::AbstractArray{Float64,2},

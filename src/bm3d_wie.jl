@@ -1,7 +1,7 @@
 """
 	bm3d_wie(img::Array{Float64}, imgBasic::Array{Float64}, sigma::AbstractFloat, config::bm3d_config)
 
-2nd step of BM3D
+2nd step of BM3DDenoise
 
 img: input noisy image
 imgBasic: denoised image from first step of BM3D (hard thresholding)

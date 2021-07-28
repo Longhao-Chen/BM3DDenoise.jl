@@ -7,7 +7,7 @@
 			position::CartesianIndex{2},
 			group_transform!::Function)
 
-Forward BM3D groupings
+Forward BM3DDenoise groupings
 """
 function form_group!(
 	G3D::AbstractArray{Float64,3},
@@ -36,7 +36,7 @@ end
 				group_itransform!::Function,
 				imgLockPool::Array{ReentrantLock})
 
-Inverse BM3D groupings
+Inverse BM3DDenoise groupings
 """
 function invert_group!(
 	img::AbstractArray{Float64,2},

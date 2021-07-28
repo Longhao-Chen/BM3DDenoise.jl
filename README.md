@@ -1,5 +1,5 @@
-# BM3D.jl
-![](https://github.com/Longhao-Chen/BM3D.jl/workflows/Unit%20test/badge.svg)
+# BM3DDenoise.jl
+![](https://github.com/Longhao-Chen/BM3DDenoise.jl/workflows/Unit%20test/badge.svg)
 
 An implementation of the BM3D(sparse 3D transform-domain collaborative filtering) denoising algorithm for Julia.
 
@@ -8,13 +8,13 @@ An implementation of the BM3D(sparse 3D transform-domain collaborative filtering
 Within Julia, use the `Pkg`:
 ```julia
 using Pkg
-Pkg.add(url = "https://github.com/Longhao-Chen/BM3D.jl.git")
+Pkg.add("BM3DDenoise")
 ```
 
 ## Usage
 
 ```julia
-using BM3D
+using BM3DDenoise
 using Images
 img = load("noise_image_path")
 denoise_img = bm3d(img, noise_variance)	# noise_variance noise_variance is the variance of the noise.
@@ -23,7 +23,7 @@ denoise_img = bm3d(img, noise_variance)	# noise_variance noise_variance is the v
 ### Example
 
 ```julia
-using BM3D
+using BM3DDenoise
 using Images
 using Downloads
 noise_image_path = download("http://www.cs.tut.fi/~foi/GCF-BM3D/images/Lena512_noi_s10.png")
@@ -61,6 +61,11 @@ noise_variance = Threshold.noisest(noise_img_y)
 
 # Known Issues
 * 3D filtering is slow.
+
+# Acknowledgements
+Thank you for your help in this project!
+
+* [johnnychen94](https://github.com/johnnychen94)
 
 # Reference
 
