@@ -1,7 +1,7 @@
 name = "BM3DDenoise"
 uuid = "95fb3b36-088a-43fb-bb1b-b1f34fadbd7d"
 authors = ["Longhao.Chen <Longhao.Chen@outlook.com>"]
-version = "1.1.0"
+version = "1.0.0"
 
 [deps]
 FFTW = "7a1cc6ca-52ef-59f5-83cd-3a7055c09341"
