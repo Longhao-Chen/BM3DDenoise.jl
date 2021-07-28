@@ -5,8 +5,7 @@
 			refIndex::Array{CartesianIndex{2},2},
 			patchSize::CartesianIndex{2},
 			position::CartesianIndex{2},
-			transform_1D!::Function,
-			transform_2D!::Function)
+			group_transform!::Function)
 
 Forward BM3D groupings
 """
@@ -17,24 +16,14 @@ function form_group!(
 	refIndex::Array{CartesianIndex{2},2},
 	patchSize::CartesianIndex{2},
 	position::CartesianIndex{2},
-	transform_1D!::Function,
-	transform_2D!::Function,
+	group_transform!::Function,
 )
 
 	# Form table of 3D groups
 	image_to_group!(img, G3D, matchTable, refIndex, patchSize, position)
 
-	# Apply 2D transform
-	@inbounds @views for k in 1:size(G3D, 1)
-		transform_2D!(G3D[k, :, :])
-	end
-
-	# Apply 1D transform
-	@inbounds @views for j in 1:patchSize[2]
-		for i in 1:patchSize[1]
-			transform_1D!(G3D[:, i, j])
-		end
-	end
+	# Apply group transform
+	group_transform!(G3D)
 end
 
 """
@@ -44,8 +33,7 @@ end
 				refIndex::Array{CartesianIndex{2},2},
 				patchSize::CartesianIndex{2},
 				position::CartesianIndex{2},
-				itransform_1D!::Function,
-				itransform_2D!::Function,
+				group_itransform!::Function,
 				imgLockPool::Array{ReentrantLock})
 
 Inverse BM3D groupings
@@ -57,22 +45,12 @@ function invert_group!(
 	refIndex::Array{CartesianIndex{2},2},
 	patchSize::CartesianIndex{2},
 	position::CartesianIndex{2},
-	itransform_1D!::Function,
-	itransform_2D!::Function,
+	group_itransform!::Function,
 	imgLockPool::Array{ReentrantLock},
 )
 
-	# Apply inverse 1D transform
-	@inbounds @views for j in 1:patchSize[2]
-		for i in 1:patchSize[1]
-			itransform_1D!(G3D[:, i, j])
-		end
-	end
-
-	# Apply inverse 2D transform
-	@inbounds @views for k in 1:size(G3D, 1)
-		itransform_2D!(G3D[k, :, :])
-	end
+	# Apply inverse group transform
+	group_itransform!(G3D)
 
 	group_to_image!(img, G3D, matchTable, refIndex, patchSize, position, imgLockPool)
 

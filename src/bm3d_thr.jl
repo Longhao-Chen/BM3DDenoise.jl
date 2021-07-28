@@ -18,11 +18,11 @@ function bm3d_thr(img::Array{Float64}, sigma::AbstractFloat, config::bm3d_config
 
 	# Block matching
 	@info "1st get_reference_pixels"
-	refIndex =
+	@time refIndex =
 		get_reference_pixels([size(img, 1); size(img, 2)], patchSize, searchStride)
 	@info "1st get_reference_pixels end"
 	@info "1st match_patches"
-	matchTable = match_patches(
+	@time matchTable = match_patches(
 		img,
 		refIndex,
 		patchSize,
@@ -38,7 +38,7 @@ function bm3d_thr(img::Array{Float64}, sigma::AbstractFloat, config::bm3d_config
 
 	# 3D filtering
 	@info "1st 3D filtering"
-	thr_3D_filtering!(
+	@time thr_3D_filtering!(
 		Wout,
 		imgOut,
 		img,
@@ -90,8 +90,7 @@ function thr_3D_filtering!(
 				refIndex,
 				patchSize,
 				CartesianIndex(I, J),
-				config.thr_transform_1D!,
-				config.thr_transform_2D!,
+				config.thr_group_transform!,
 			)
 
 			# Filter 3D groups by hard thresholding
@@ -112,8 +111,7 @@ function thr_3D_filtering!(
 				refIndex,
 				patchSize,
 				CartesianIndex(I, J),
-				config.thr_itransform_1D!,
-				config.thr_itransform_2D!,
+				config.thr_group_itransform!,
 				imgLockPool,
 			)
 			group_to_image!(

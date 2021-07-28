@@ -23,11 +23,11 @@ function bm3d_wie(
 
 	# block matching step
 	@info "2st get_reference_pixels"
-	refIndex =
+	@time refIndex =
 		get_reference_pixels([size(img, 1); size(img, 2)], patchSize, searchStride)
 	@info "2st get_reference_pixels end"
 	@info "2st match_patches"
-	matchTable = match_patches(
+	@time matchTable = match_patches(
 		imgBasic,
 		refIndex,
 		patchSize,
@@ -43,7 +43,7 @@ function bm3d_wie(
 
 	# 3D filtering
 	@info "2st 3D filtering"
-	wie_3D_filtering!(
+	@time wie_3D_filtering!(
 		Wout,
 		imgOut,
 		img,
@@ -99,8 +99,7 @@ function wie_3D_filtering!(
 				refIndex,
 				patchSize,
 				CartesianIndex(I, J),
-				config.wie_transform_1D!,
-				config.wie_transform_2D!,
+				config.wie_group_transform!,
 			)
 			form_group!(
 				G3Dbasic,
@@ -109,8 +108,7 @@ function wie_3D_filtering!(
 				refIndex,
 				patchSize,
 				CartesianIndex(I, J),
-				config.wie_transform_1D!,
-				config.wie_transform_2D!,
+				config.wie_group_transform!,
 			)
 
 			# Wiener filtering of 3D groups, using basic estimate as target spectrum
@@ -133,8 +131,7 @@ function wie_3D_filtering!(
 				refIndex,
 				patchSize,
 				CartesianIndex(I, J),
-				config.wie_itransform_1D!,
-				config.wie_itransform_2D!,
+				config.wie_group_itransform!,
 				imgLockPool,
 			)
 			group_to_image!(
