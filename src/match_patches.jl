@@ -55,7 +55,7 @@ function match_patches(
 						matches[i, j, maxDistImg] = CartesianIndex(si, sj)
 						dist[i, j, maxDistImg] = weight
 						dist[i, j, nMatch + 1], maxDistMatch[i, j] =
-							findmax(dist[i, j, 1:nMatch])
+							findmax(@views dist[i, j, 1:nMatch])
 					end
 				end
 
@@ -64,14 +64,13 @@ function match_patches(
 						maxDistImg = maxDistMatch[si, sj]
 						matches[si, sj, maxDistImg] = CartesianIndex(i, j)
 						dist[si, sj, maxDistImg] = weight
-						dist[si, sj, nMatch + 1],
-						maxDistMatch[si, sj] =
-							findmax(dist[si, sj, 1:nMatch])
+						dist[si, sj, nMatch + 1], maxDistMatch[si, sj] =
+							findmax(@views dist[si, sj, 1:nMatch])
 					end
 				end
 			end
 			for si in (i + 1):iE
-				weight = distF(
+				@views weight = distF(
 					imgRef,
 					img[refIndex[si, j]:(refIndex[si, j] + patchSize - CartesianIndex(1, 1))],
 				)
@@ -81,7 +80,7 @@ function match_patches(
 						matches[i, j, maxDistImg] = CartesianIndex(si, j)
 						dist[i, j, maxDistImg] = weight
 						dist[i, j, nMatch + 1], maxDistMatch[i, j] =
-							findmax(dist[i, j, 1:nMatch])
+							findmax(@views dist[i, j, 1:nMatch])
 					end
 				end
 
@@ -90,14 +89,13 @@ function match_patches(
 						maxDistImg = maxDistMatch[si, j]
 						matches[si, j, maxDistImg] = CartesianIndex(i, j)
 						dist[si, j, maxDistImg] = weight
-						dist[si, j, nMatch + 1],
-						maxDistMatch[si, j] =
-							findmax(dist[si, j, 1:nMatch])
+						dist[si, j, nMatch + 1], maxDistMatch[si, j] =
+							findmax(@views dist[si, j, 1:nMatch])
 					end
 				end
 			end
 			for sj in (j + 1):jE
-				weight = distF(
+				@views weight = distF(
 					imgRef,
 					img[refIndex[i, sj]:(refIndex[i, sj] + patchSize - CartesianIndex(1, 1))],
 				)
@@ -107,7 +105,7 @@ function match_patches(
 						matches[i, j, maxDistImg] = CartesianIndex(i, sj)
 						dist[i, j, maxDistImg] = weight
 						dist[i, j, nMatch + 1], maxDistMatch[i, j] =
-							findmax(dist[i, j, 1:nMatch])
+							findmax(@views dist[i, j, 1:nMatch])
 					end
 				end
 
@@ -116,9 +114,8 @@ function match_patches(
 						maxDistImg = maxDistMatch[i, sj]
 						matches[i, sj, maxDistImg] = CartesianIndex(i, j)
 						dist[i, sj, maxDistImg] = weight
-						dist[i, sj, nMatch + 1],
-						maxDistMatch[i, sj] =
-							findmax(dist[i, sj, 1:nMatch])
+						dist[i, sj, nMatch + 1], maxDistMatch[i, sj] =
+							findmax(@views dist[i, sj, 1:nMatch])
 					end
 				end
 			end
