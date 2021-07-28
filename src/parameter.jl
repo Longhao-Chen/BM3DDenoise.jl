@@ -52,17 +52,17 @@ mutable struct bm3d_config
 
 	bm3d_config() = new(
 		CartesianIndex(8, 8),
-		CartesianIndex(3, 3),
-		CartesianIndex(19, 19),
+		CartesianIndex(2, 2),
+		CartesianIndex(24, 24),
 		31,
-		2.7,
+		2.6,
 		Euclidean2,
 		FFTW.dct!,
 		FFTW.idct!,
 
 		CartesianIndex(8, 8),
-		CartesianIndex(3, 3),
-		CartesianIndex(11, 11),
+		CartesianIndex(2, 2),
+		CartesianIndex(19, 19),
 		15,
 		Euclidean2,
 		FFTW.dct!,
