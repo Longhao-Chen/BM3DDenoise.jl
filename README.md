@@ -5,7 +5,7 @@ An implementation of the BM3D(sparse 3D transform-domain collaborative filtering
 
 ## Installation
 
-Within Julia, use the Pkg:
+Within Julia, use the `Pkg`:
 ```julia
 using Pkg
 Pkg.add(url = "https://github.com/Longhao-Chen/BM3D.jl.git")
@@ -25,6 +25,7 @@ denoise_img = bm3d(img, noise_variance)	# noise_variance noise_variance is the v
 ```julia
 using BM3D
 using Images
+using Downloads
 noise_image_path = download("http://www.cs.tut.fi/~foi/GCF-BM3D/images/Lena512_noi_s10.png")
 noise_variance = 10 / 255
 img = load(noise_image_path)
@@ -37,7 +38,7 @@ If you want to customize parameters, see:
 ?bm3d_config
 ```
 
-### Noise estimator
+## Noise estimator
 
 For the image that does not know the noise variance, we can use [Wavelets.jl](https://github.com/JuliaDSP/Wavelets.jl/) to make noise estimation.
 
@@ -58,13 +59,10 @@ noise_img_y ./= (235. - 16.)
 noise_variance = Threshold.noisest(noise_img_y)
 ```
 
-## Todo
+# Known Issues
+* 3D filtering is slow.
 
-- [x] Add color image support
-- [ ] Performance optimization
-- [ ] ~~Add noise variance estimation~~
-
-## Reference
+# Reference
 
 > https://webpages.tuni.fi/foi/GCF-BM3D/  
 > https://github.com/rcrandall/BM3D.jl  
