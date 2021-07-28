@@ -55,7 +55,7 @@ Lena = load(joinpath(tempdir(), "Lena512.png"))
 				Lena,
 				BM3D.bm3d(img, σ[i] / 255),
 			)
-			println("σ=$(σ[i]), $(bm3d_psnr)")
+			println("σ=$(σ[i]), $(bm3d_psnr) > $(PSNR_data[i])")
 			@test bm3d_psnr >= PSNR_data[i]
 		end
 	end
