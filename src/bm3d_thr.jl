@@ -94,9 +94,8 @@ function thr_3D_filtering!(
 			)
 
 			# Filter 3D groups by hard thresholding
-			HardThresholding!(G3D, sigma * thresh3D)
+			T = HardThresholding!(G3D, sigma * thresh3D)
 
-			T = nnz(G3D)
 			if T > zero(T)
 				W = 1.0 / (T * sigma^2)
 				G3D .*= W
@@ -154,13 +153,4 @@ function thr_3D_filtering!(
 			config,
 		)
 	end
-end
-
-"""
-	nnz(data::AbstractArray{Float64})
-
-Returns the number of non-zero elements in the array
-"""
-function nnz(data::AbstractArray{Float64})
-	sum(data .!= 0.0)
 end
