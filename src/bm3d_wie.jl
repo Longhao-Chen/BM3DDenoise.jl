@@ -22,40 +22,78 @@ function bm3d_wie(
 	nMatch = config.wie_nMatch
 
 	# block matching step
-	@info "2st get_reference_pixels"
-	@time refIndex =
-		get_reference_pixels([size(img, 1); size(img, 2)], patchSize, searchStride)
-	@info "2st get_reference_pixels end"
-	@info "2st match_patches"
-	@time matchTable = match_patches(
-		imgBasic,
-		refIndex,
-		patchSize,
-		searchWin,
-		nMatch,
-		config.wie_distFunction,
-	)
-	@info "2st match_patches end"
+	config.show_info && @info "2st get_reference_pixels"
+	if config.show_info
+		refIndex = @time get_reference_pixels(
+			[size(img, 1); size(img, 2)],
+			patchSize,
+			searchStride,
+		)
+	else
+		refIndex = get_reference_pixels(
+			[size(img, 1); size(img, 2)],
+			patchSize,
+			searchStride,
+		)
+	end
+	config.show_info && @info "2st get_reference_pixels end"
+
+	config.show_info && @info "2st match_patches"
+	if config.show_info
+		matchTable = @time match_patches(
+			imgBasic,
+			refIndex,
+			patchSize,
+			searchWin,
+			nMatch,
+			config.wie_distFunction,
+		)
+	else
+		matchTable = match_patches(
+			imgBasic,
+			refIndex,
+			patchSize,
+			searchWin,
+			nMatch,
+			config.wie_distFunction,
+		)
+	end
+	config.show_info && @info "2st match_patches end"
 
 	# Don't use similar(), because it need initialize to 0.0
 	Wout = zeros(Float64, size(img)...)
 	imgOut = zeros(Float64, size(img)...)
 
 	# 3D filtering
-	@info "2st 3D filtering"
-	@time wie_3D_filtering!(
-		Wout,
-		imgOut,
-		img,
-		imgBasic,
-		matchTable,
-		refIndex,
-		patchSize,
-		nMatch,
-		sigma,
-		config,
-	)
-	@info "2st 3D filtering end"
+	config.show_info && @info "2st 3D filtering"
+	if config.show_info
+		@time wie_3D_filtering!(
+			Wout,
+			imgOut,
+			img,
+			imgBasic,
+			matchTable,
+			refIndex,
+			patchSize,
+			nMatch,
+			sigma,
+			config,
+		)
+	else
+		wie_3D_filtering!(
+			Wout,
+			imgOut,
+			img,
+			imgBasic,
+			matchTable,
+			refIndex,
+			patchSize,
+			nMatch,
+			sigma,
+			config,
+		)
+	end
+	config.show_info && @info "2st 3D filtering end"
 
 	return imgOut ./ Wout
 

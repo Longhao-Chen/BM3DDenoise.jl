@@ -24,6 +24,9 @@ bm3d_config.wie_group_transform! = FFTW.dct!	A function that 3D transform in gro
 bm3d_config.wie_group_itransform! = FFTW.idct!	A function that 3D inverse transform in group;
 ```
 
+## others
+bm3d_config.show_info = false	show some running message
+
 note:
 
 The 3D group data struct:
@@ -33,6 +36,8 @@ size(G3D)	# (nMatch, patchSize[1], patchSize[2])
 ```
 """
 mutable struct bm3d_config
+	show_info::Bool
+
 	thr_patchSize::CartesianIndex{2}
 	thr_searchStride::CartesianIndex{2}
 	thr_searchWin::CartesianIndex{2}
@@ -51,6 +56,7 @@ mutable struct bm3d_config
 	wie_group_itransform!::Function
 
 	bm3d_config() = new(
+		false,
 		CartesianIndex(8, 8),
 		CartesianIndex(2, 2),
 		CartesianIndex(24, 24),

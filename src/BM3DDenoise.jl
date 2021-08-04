@@ -31,7 +31,7 @@ function bm3d(img, σ::AbstractFloat)
 end
 
 function bm3d(img::Array{Float64}, σ::AbstractFloat, config::bm3d_config)
-	print(config)
+	config.show_info && print(config)
 	imgBasic = bm3d_thr(img, σ, config)
 	bm3d_wie(img, imgBasic, σ, config)
 end
