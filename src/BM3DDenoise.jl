@@ -18,31 +18,29 @@ include("match_patches.jl")
 	bm3d(img, σ, config)
 
 ```
-img: input grayscale image(Float64 or Gray or YCbCr or RGB)
+img: input grayscale image(Float32 or Float64 or Gray or YCbCr or RGB)
 σ: known or assumed standard deviation of noise
 config: see bm3d_config.
 return: denoised image
 ```
 """
-function bm3d(img, σ::AbstractFloat)
-	# Use default parameters
-	config = bm3d_config()
-	bm3d(img, σ, config)
+function bm3d(img::Array{Float32}, σ::AbstractFloat, config::bm3d_config = bm3d_config())
+	Float32.(bm3d(Float64.(img), σ, config))
 end
 
-function bm3d(img::Array{Float64}, σ::AbstractFloat, config::bm3d_config)
+function bm3d(img::Array{Float64}, σ::AbstractFloat, config::bm3d_config = bm3d_config())
 	config.show_info && print(config)
 	imgBasic = bm3d_thr(img, σ, config)
 	bm3d_wie(img, imgBasic, σ, config)
 end
 
-function bm3d(img::Matrix{Gray{T}}, σ::AbstractFloat, config::bm3d_config) where {T}
+function bm3d(img::Matrix{Gray{T}}, σ::AbstractFloat, config::bm3d_config = bm3d_config()) where {T}
 	img_float = bm3d(Float64.(img), σ, config)
-	Gray.(img_float)
+	Gray{T}.(img_float)
 end
 
 # Here is the color image
-function bm3d(img::Matrix{YCbCr{T}}, σ::AbstractFloat, config::bm3d_config) where {T}
+function bm3d(img::Matrix{YCbCr{T}}, σ::AbstractFloat, config::bm3d_config = bm3d_config()) where {T}
 	# Split into 3-dimensional array, each dimension data is:[:, :, 1] - Y; [:, :, 2] - Cb; [:, :, 3] -Cr
 	img_Array = permutedims(Float64.(channelview(img)), [2, 3, 1])
 	# normalization
@@ -60,9 +58,9 @@ function bm3d(img::Matrix{YCbCr{T}}, σ::AbstractFloat, config::bm3d_config) whe
 	colorview(YCbCr, permutedims(T.(img_Array), [3, 1, 2]))
 end
 
-function bm3d(img::Matrix{RGB{T}}, σ::AbstractFloat, config::bm3d_config) where {T}
+function bm3d(img::Matrix{RGB{T}}, σ::AbstractFloat, config::bm3d_config = bm3d_config()) where {T}
 	img_YCbCr = bm3d(YCbCr.(img), σ, config)
-	RGB.(img_YCbCr)
+	RGB{T}.(img_YCbCr)
 end
 
 end # module
