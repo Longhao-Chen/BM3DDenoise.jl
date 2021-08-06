@@ -42,6 +42,8 @@ end
 
 
 Lena = load(joinpath(tempdir(), "Lena512.png"))
+config = BM3DDenoise.bm3d_config()
+config.show_info = true
 @testset "BM3DDenoise_gray" begin
 	for i in 1:length(σ)
 		@testset "σ=$(σ[i])" begin
@@ -53,7 +55,7 @@ Lena = load(joinpath(tempdir(), "Lena512.png"))
 			)
 			bm3d_psnr = assess_psnr(
 				Lena,
-				BM3DDenoise.bm3d(img, σ[i] / 255),
+				BM3DDenoise.bm3d(img, σ[i] / 255, config),
 			)
 			println("σ=$(σ[i]), $(bm3d_psnr) > $(PSNR_data[i])")
 			@test bm3d_psnr >= PSNR_data[i]
@@ -64,7 +66,7 @@ end
 Lena = load(joinpath(tempdir(), "image_Lena512rgb.png"))
 @testset "BM3DDenoise_color" begin
 	img = load(joinpath(tempdir(), "image_Lena512rgb_noi_s100.png"))
-	bm3d_psnr = assess_psnr(Lena, BM3DDenoise.bm3d(img, 100 / 255))
+	bm3d_psnr = assess_psnr(Lena, BM3DDenoise.bm3d(img, 100 / 255, config))
 	println("σ=100(rgb), $(bm3d_psnr)")
 	@test bm3d_psnr >= 22
 end
