@@ -59,9 +59,6 @@ noise_img_y ./= (235. - 16.)
 noise_variance = Threshold.noisest(noise_img_y)
 ```
 
-# Known Issues
-* 3D filtering is slow.
-
 # Acknowledgements
 Thank you for your help in this project!
 

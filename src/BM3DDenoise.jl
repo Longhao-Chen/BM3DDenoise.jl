@@ -1,7 +1,6 @@
 module BM3DDenoise
 export bm3d, bm3d_config
 
-import FFTW
 using LinearAlgebra
 using ImageCore
 

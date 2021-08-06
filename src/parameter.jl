@@ -1,3 +1,4 @@
+include("Transform/dct.jl")
 """
 Some runtime parameters. The default value is after the `=`
 
@@ -63,16 +64,16 @@ mutable struct bm3d_config
 		31,
 		2.6,
 		Euclidean2,
-		FFTW.dct!,
-		FFTW.idct!,
+		dct!,
+		idct!,
 
 		CartesianIndex(8, 8),
 		CartesianIndex(2, 2),
 		CartesianIndex(19, 19),
 		15,
 		Euclidean2,
-		FFTW.dct!,
-		FFTW.idct!,
+		dct!,
+		idct!,
 	)
 end
 
