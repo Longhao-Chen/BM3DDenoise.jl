@@ -1,4 +1,5 @@
 module BM3DDenoise
+using Base: UInt16
 export bm3d, bm3d_config
 
 using LinearAlgebra

@@ -21,10 +21,10 @@ function match_patches(
 
 	matches = Array{CartesianIndex{2}}(undef, refIndexH, refIndexW, nMatch)
 
-	dist = Array{Float64}(undef, refIndexH, refIndexW, nMatch + 1)# dist[i, j, end] is the largest item in current dist[i, j, 1:end-1]
-	dist .= typemax(Float64)
+	dist = Array{Float16}(undef, refIndexH, refIndexW, nMatch + 1)# dist[i, j, end] is the largest item in current dist[i, j, 1:end-1]
+	dist .= typemax(Float16)
 
-	maxDistMatch = Array{UInt}(undef, refIndexH, refIndexW)# maxDistMatch[i, j] is the position in matches[i, j, :] corresponding to the largest distance block
+	maxDistMatch = Array{UInt16}(undef, refIndexH, refIndexW)# maxDistMatch[i, j] is the position in matches[i, j, :] corresponding to the largest distance block
 	maxDistMatch .= 1
 
 	lockPool = Array{ReentrantLock}(undef, refIndexH, refIndexW)

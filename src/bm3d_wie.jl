@@ -155,7 +155,7 @@ function wie_3D_filtering!(
 
 			# Weight
 			T = norm(WC, 1)
-			if T > zero(T)
+			if T > 0.
 				W = 1.0 / (T * sigma^2)
 				G3D .*= W
 			else

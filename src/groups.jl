@@ -125,7 +125,7 @@ function group_to_image!(
 		) + refIndex[position])] .+= W
 	end
 
-	@inbounds @views for k in 1:nMatch
+	@inbounds @views @fastmath for k in 1:nMatch
 		position2 = matchTable[position, k]
 		lock(imgLockPool[position2]) do
 			img[refIndex[position2]:(patchSize - CartesianIndex(
@@ -162,7 +162,7 @@ function image_to_group!(
 			1,
 		) + refIndex[position])]
 
-	@views @inbounds for k in 1:nMatch
+	@views @inbounds @fastmath for k in 1:nMatch
 		position2 = matchTable[position, k]
 		G3D[k + 1, :, :] .=
 			img[refIndex[position2]:(patchSize - CartesianIndex(
